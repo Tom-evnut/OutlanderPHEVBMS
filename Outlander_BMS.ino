@@ -174,6 +174,8 @@ void packinfo()
           lowcell = voltage[x][i];
         }
       }
+      Serial.println();
+      Serial.print("        ");
       for (int i = 0; i < 3; i++)
       {
         Serial.print("Temp ");
