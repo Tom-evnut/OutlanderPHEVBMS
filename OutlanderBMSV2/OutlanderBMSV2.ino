@@ -8,6 +8,8 @@
 #include <FlexCAN.h>
 #include <SPI.h>
 
+#define CPU_REBOOT (_reboot_Teensyduino_());
+
 BMSModuleManager bms;
 SerialConsole console;
 EEPROMSettings settings;
@@ -1089,6 +1091,10 @@ void menu()
   {
     switch (incomingByte)
     {
+      case 'r'://restart
+       CPU_REBOOT ;
+       break;
+       
       case 113: //q to go back to main menu
 
         menuload = 0;
@@ -1136,6 +1142,7 @@ void menu()
     SERIALCONSOLE.println("Debugging Paused");
     SERIALCONSOLE.println("c - Current Sensor Calibration");
     SERIALCONSOLE.println("b - Battery Settings");
+    SERIALCONSOLE.println("R - Restart BMS");
     SERIALCONSOLE.println("q - exit menu");
     debug = 0;
     menuload = 1;
