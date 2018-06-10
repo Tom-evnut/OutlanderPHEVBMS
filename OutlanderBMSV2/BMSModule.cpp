@@ -242,8 +242,14 @@ float BMSModule::getAverageV()
     }
   }
 
-  avgVal /= x;
-  return avgVal;
+    scells = x;
+    avgVal /= x;
+    return avgVal;    
+}
+
+int BMSModule::getscells()
+{
+  return scells;
 }
 
 float BMSModule::getHighestModuleVolt()

@@ -7,6 +7,7 @@ class BMSModuleManager
 {
 public:
     BMSModuleManager();
+    int seriescells();
     void decodecan(CAN_message_t &msg);
     void balanceCells();
     void setupBoards();
@@ -52,6 +53,7 @@ private:
     int batteryID;
     int numFoundModules;                    // The number of modules that seem to exist
     bool isFaulted;
+    int spack;
     /*
     void sendBatterySummary();
     void sendModuleSummary(int module);

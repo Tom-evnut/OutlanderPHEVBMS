@@ -7,6 +7,7 @@ class BMSModule
     BMSModule();
     void decodecan(int Id,CAN_message_t &msg);
     void readStatus();
+     int getscells();
     bool readModuleValues();
     float getCellVoltage(int cell);
     float getLowCellV();
@@ -53,5 +54,6 @@ class BMSModule
     int CUVFaults;
     int sensor;
     uint8_t moduleAddress;     //1 to 0x3E
+    int scells;
     int balstat;
 };

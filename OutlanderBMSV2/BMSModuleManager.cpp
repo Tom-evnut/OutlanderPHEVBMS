@@ -18,6 +18,18 @@ BMSModuleManager::BMSModuleManager()
     isFaulted = false;
 }
 
+int BMSModuleManager::seriescells()
+{
+  spack = 0;
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting())
+    {
+      spack = spack + modules[y].getscells();
+    }
+  }
+  return spack;
+}
 
 void BMSModuleManager::decodecan(CAN_message_t &msg)
 { 
@@ -432,10 +444,7 @@ void BMSModuleManager::printPackSummary()
     Logger::console("");
     Logger::console("");
     Logger::console("");
-    Logger::console("                                     Pack Status:");
-    if (isFaulted) Logger::console("                                       FAULTED!");
-    else Logger::console("                                   All systems go!");
-    Logger::console("Modules: %i    Voltage: %fV   Avg Cell Voltage: %fV     Avg Temp: %fC ", numFoundModules, 
+    Logger::console("Modules: %i  Cells: %i  Voltage: %fV   Avg Cell Voltage: %fV     Avg Temp: %fC ", numFoundModules,seriescells(), 
                     getPackVoltage(),getAvgCellVolt(), getAvgTemperature());
     Logger::console("");
     for (int y = 1; y < 63; y++)
@@ -549,10 +558,7 @@ void BMSModuleManager::printPackDetails()
     Logger::console("");
     Logger::console("");
     Logger::console("");
-    Logger::console("                                         Pack Status:");
-    if (isFaulted) Logger::console("                                           FAULTED!");
-    else Logger::console("                                      All systems go!");
-    Logger::console("Modules: %i    Voltage: %fV   Avg Cell Voltage: %fV  Low Cell Voltage: %fV   High Cell Voltage: %fV   Avg Temp: %fC ", numFoundModules, 
+    Logger::console("Modules: %i Cells: %i  Voltage: %fV   Avg Cell Voltage: %fV  Low Cell Voltage: %fV   High Cell Voltage: %fV   Avg Temp: %fC ", numFoundModules,seriescells(), 
                     getPackVoltage(),getAvgCellVolt(),LowCellVolt, HighCellVolt, getAvgTemperature());
     Logger::console("");
     for (int y = 1; y < 63; y++)
