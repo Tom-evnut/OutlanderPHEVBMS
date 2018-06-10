@@ -242,9 +242,9 @@ float BMSModule::getAverageV()
     }
   }
 
-    scells = x;
-    avgVal /= x;
-    return avgVal;    
+  scells = x;
+  avgVal /= x;
+  return avgVal;
 }
 
 int BMSModule::getscells()
@@ -286,7 +286,30 @@ float BMSModule::getLowestTemp()
 
 float BMSModule::getLowTemp()
 {
-  return (temperatures[0] < temperatures[1]) ? temperatures[0] : temperatures[1];
+  if (getAvgTemp() > 0.5)
+  {
+    if (temperatures[0] > 0.5)
+    {
+      if (temperatures[0] < temperatures[1] && temperatures[0] < temperatures[2])
+      {
+        return (temperatures[0]);
+      }
+    }
+    if (temperatures[1] > 0.5)
+    {
+      if (temperatures[1] < temperatures[0] && temperatures[1] < temperatures[2])
+      {
+        return (temperatures[1]);
+      }
+    }
+    if (temperatures[2] > 0.5)
+    {
+      if (temperatures[2] < temperatures[1] && temperatures[2] < temperatures[0])
+      {
+        return (temperatures[2]);
+      }
+    }
+  }
 }
 
 float BMSModule::getHighTemp()
@@ -298,7 +321,41 @@ float BMSModule::getAvgTemp()
 {
   if (sensor == 0)
   {
-    return (temperatures[0] + temperatures[1]+ temperatures[2]) / 3.0f;
+    if ((temperatures[0] + temperatures[1] + temperatures[2]) / 3.0f > 0.5)
+    {
+      if (temperatures[0] > 0.5 && temperatures[1] > 0.5 && temperatures[2] > 0.5)
+      {
+        return (temperatures[0] + temperatures[1] + temperatures[2]) / 3.0f;
+      }
+      if (temperatures[0] < 0.5 && temperatures[1] > 0.5 && temperatures[2] > 0.5)
+      {
+        return (temperatures[1] + temperatures[2]) / 2.0f;
+      }
+      if (temperatures[0] > 0.5 && temperatures[1] < 0.5 && temperatures[2] > 0.5)
+      {
+        return (temperatures[0] + temperatures[2]) / 2.0f;
+      }
+      if (temperatures[0] > 0.5 && temperatures[1] > 0.5 && temperatures[2] < 0.5)
+      {
+        return (temperatures[0] + temperatures[1]) / 2.0f;
+      }
+      if (temperatures[0] > 0.5 && temperatures[1] < 0.5 && temperatures[2] < 0.5)
+      {
+        return (temperatures[0]);
+      }
+      if (temperatures[0] < 0.5 && temperatures[1] > 0.5 && temperatures[2] < 0.5)
+      {
+        return (temperatures[1]);
+      }
+      if (temperatures[0] < 0.5 && temperatures[1] < 0.5 && temperatures[2] > 0.5)
+      {
+        return (temperatures[2]);
+      }
+            if (temperatures[0] < 0.5 && temperatures[1] < 0.5 && temperatures[2] < 0.5)
+      {
+        return (-80);
+      }
+    }
   }
   else
   {
@@ -308,10 +365,10 @@ float BMSModule::getAvgTemp()
 
 float BMSModule::getModuleVoltage()
 {
-  moduleVolt =0;
-  for (int I; I <8; I++)
+  moduleVolt = 0;
+  for (int I; I < 8; I++)
   {
-    moduleVolt = moduleVolt+cellVolt[I];
+    moduleVolt = moduleVolt + cellVolt[I];
   }
   return moduleVolt;
 }
@@ -355,6 +412,6 @@ void BMSModule::setIgnoreCell(float Ignore)
   Serial.println();
   Serial.println(Ignore);
   Serial.println();
-  
+
 }
 
