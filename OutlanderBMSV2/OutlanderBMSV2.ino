@@ -146,7 +146,7 @@ void loadSettings()
   settings.ChargeTSetpoint = 0.0f;
   settings.DisTSetpoint = 40.0f;
   settings.IgnoreTemp = 0; // 0 - use both sensors, 1 or 2 only use that sensor
-  settings.IgnoreVolt = 0.5;//
+  settings.IgnoreVolt = 2.2;//
   settings.balanceVoltage = 3.9f;
   settings.balanceHyst = 0.04f;
   settings.logLevel = 2;
@@ -557,12 +557,19 @@ void updateSOC()
 {
   if (SOCset == 0)
   {
-    SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), socvolt[0], socvolt[2], socvolt[1], socvolt[3]);
-    SERIALCONSOLE.print("  ");
-    SERIALCONSOLE.print(SOC);
-    SERIALCONSOLE.print("  ");
-    ampsecond = (SOC * CAP * 10) / 0.27777777777778 ;
-    SOCset = 1;
+    if (millis()> 9000)
+    {
+      bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+    }
+    if (millis() > 10000)
+    {
+      SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), socvolt[0], socvolt[2], socvolt[1], socvolt[3]);
+
+      ampsecond = (SOC * CAP * 10) / 0.27777777777778 ;
+      SOCset = 1;
+      SERIALCONSOLE.println("  ");
+      SERIALCONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
+    }
   }
   SOC = ((ampsecond * 0.27777777777778) / (CAP * 1000)) * 100;
   if (bms.getAvgCellVolt() > settings.OverVSetpoint)
@@ -735,14 +742,14 @@ void VEcan() //communication with Victron system over CAN
 {
   msg.id  = 0x351;
   msg.len = 8;
-  msg.buf[0] = lowByte(uint16_t(settings.OverVSetpoint*bms.seriescells())*10);
-  msg.buf[1] = highByte(uint16_t(settings.OverVSetpoint*bms.seriescells())*10);
+  msg.buf[0] = lowByte(uint16_t(settings.OverVSetpoint * bms.seriescells() / Pstrings) * 10);
+  msg.buf[1] = highByte(uint16_t(settings.OverVSetpoint * bms.seriescells() / Pstrings) * 10);
   msg.buf[2] = lowByte(chargecurrent);
   msg.buf[3] = highByte(chargecurrent);
   msg.buf[4] = lowByte(discurrent );
   msg.buf[5] = highByte(discurrent);
-  msg.buf[6] = lowByte(uint16_t(settings.UnderVSetpoint*bms.seriescells())*10);
-  msg.buf[7] = highByte(uint16_t(settings.UnderVSetpoint*bms.seriescells())*10);
+  msg.buf[6] = lowByte(uint16_t(settings.UnderVSetpoint * bms.seriescells() / Pstrings) * 10);
+  msg.buf[7] = highByte(uint16_t(settings.UnderVSetpoint * bms.seriescells() / Pstrings) * 10);
   Can0.write(msg);
 
   msg.id  = 0x355;
@@ -1092,9 +1099,9 @@ void menu()
     switch (incomingByte)
     {
       case 'r'://restart
-       CPU_REBOOT ;
-       break;
-       
+        CPU_REBOOT ;
+        break;
+
       case 113: //q to go back to main menu
 
         menuload = 0;

@@ -36,17 +36,17 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       break;
 
     case 0x3:
-      cellVolt[4] = (msg.buf[0] * 256 + msg.buf[1]) * 0.001;
-      cellVolt[5] = (msg.buf[2] * 256 + msg.buf[3]) * 0.001;
-      cellVolt[6] = (msg.buf[4] * 256 + msg.buf[5]) * 0.001;
-      cellVolt[7] = (msg.buf[6] * 256 + msg.buf[7]) * 0.001;
+      cellVolt[4] = float((msg.buf[0] * 256 + msg.buf[1]) * 0.001);
+      cellVolt[5] = float((msg.buf[2] * 256 + msg.buf[3]) * 0.001);
+      cellVolt[6] = float((msg.buf[4] * 256 + msg.buf[5]) * 0.001);
+      cellVolt[7] = float((msg.buf[6] * 256 + msg.buf[7]) * 0.001);
       break;
 
     case 0x2:
-      cellVolt[0] = (msg.buf[0] * 256 + msg.buf[1]) * 0.001;
-      cellVolt[1] = (msg.buf[2] * 256 + msg.buf[3]) * 0.001;
-      cellVolt[2] = (msg.buf[4] * 256 + msg.buf[5]) * 0.001;
-      cellVolt[3] = (msg.buf[6] * 256 + msg.buf[7]) * 0.001;
+      cellVolt[0] = float((msg.buf[0] * 256 + msg.buf[1]) * 0.001);
+      cellVolt[1] = float((msg.buf[2] * 256 + msg.buf[3]) * 0.001);
+      cellVolt[2] = float((msg.buf[4] * 256 + msg.buf[5]) * 0.001);
+      cellVolt[3] = float((msg.buf[6] * 256 + msg.buf[7]) * 0.001);
 
       break;
 
@@ -351,5 +351,10 @@ void BMSModule::setExists(bool ex)
 void BMSModule::setIgnoreCell(float Ignore)
 {
   IgnoreCell = Ignore;
+  Serial.println();
+  Serial.println();
+  Serial.println(Ignore);
+  Serial.println();
+  
 }
 
