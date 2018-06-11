@@ -120,6 +120,7 @@ uint16_t socvolt[4] = {3100, 10, 4100, 90};
 int outputstate = 0;
 int incomingByte = 0;
 int x = 0;
+int balancecells;
 
 //Debugging modes//////////////////
 int debug = 1;
@@ -240,9 +241,14 @@ void loop()
 
     case (Ready):
       Discharge = 0;
-      if (bms.getHighCellVolt() > settings.balanceVoltage);
+      if (bms.getHighCellVolt() > settings.balanceVoltage)
       {
         bms.balanceCells();
+        balancecells = 1;
+      }
+      else
+      {
+        balancecells = 0;
       }
       if (digitalRead(IN2) == HIGH && (settings.balanceVoltage + settings.balanceHyst) > bms.getHighCellVolt()) //detect AC present for charging and check not balancing
       {
@@ -278,9 +284,14 @@ void loop()
     case (Charge):
       Discharge = 0;
       digitalWrite(OUT3, HIGH);//enable charger
-      if (bms.getHighCellVolt() > settings.balanceVoltage);
+      if (bms.getHighCellVolt() > settings.balanceVoltage)
       {
         bms.balanceCells();
+        balancecells = 1;
+      }
+      else
+      {
+        balancecells = 0;
       }
       if (bms.getHighCellVolt() > settings.OverVSetpoint);
       {
@@ -557,7 +568,7 @@ void updateSOC()
 {
   if (SOCset == 0)
   {
-    if (millis()> 9000)
+    if (millis() > 9000)
     {
       bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
     }
@@ -813,6 +824,22 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[6] = bmsmanu[6];
   msg.buf[7] = bmsmanu[7];
   Can0.write(msg);
+
+  if (balancecells == 1)
+  {
+    msg.id  = 0x3c3;
+    msg.len = 8;
+    msg.buf[0] = lowByte(uint16_t(settings.balanceVoltage * 1000));
+    msg.buf[1] = highByte(uint16_t(settings.balanceVoltage * 1000));
+    msg.buf[2] =  0x01;
+    msg.buf[3] =  0x04;
+    msg.buf[4] =  0x03;
+    msg.buf[5] =  0x00;
+    msg.buf[6] =  0x00;
+    msg.buf[7] = 0x00;
+    Can0.write(msg);
+  }
+
 }
 
 void BMVmessage()//communication with the Victron Color Control System over VEdirect
