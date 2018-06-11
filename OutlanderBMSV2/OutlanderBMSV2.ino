@@ -827,7 +827,6 @@ void VEcan() //communication with Victron system over CAN
 
   if (balancecells == 1)
   {
-    msg.buf[0] = lowByte(uint16_t(settings.balanceVoltage * 1000));
     if (bms.getLowCellVolt() + settings.balanceHyst < bms.getHighCellVolt())
     {
       msg.id  = 0x3c3;
