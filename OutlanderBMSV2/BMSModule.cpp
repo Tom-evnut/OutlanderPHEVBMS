@@ -225,7 +225,11 @@ float BMSModule::getLowCellV()
 float BMSModule::getHighCellV()
 {
   float hiVal = 0.0f;
-  for (int i = 0; i < 8; i++) if (cellVolt[i] > hiVal) hiVal = cellVolt[i];
+  for (int i = 0; i < 8; i++)
+    if (cellVolt[i] > IgnoreCell && cellVolt[i] < 60.0)
+    {
+      if (cellVolt[i] > hiVal) hiVal = cellVolt[i];
+    }
   return hiVal;
 }
 
@@ -235,7 +239,7 @@ float BMSModule::getAverageV()
   float avgVal = 0.0f;
   for (int i = 0; i < 8; i++)
   {
-    if (cellVolt[i] > IgnoreCell)
+    if (cellVolt[i] > IgnoreCell && cellVolt[i] < 60.0)
     {
       x++;
       avgVal += cellVolt[i];
@@ -351,7 +355,7 @@ float BMSModule::getAvgTemp()
       {
         return (temperatures[2]);
       }
-            if (temperatures[0] < 0.5 && temperatures[1] < 0.5 && temperatures[2] < 0.5)
+      if (temperatures[0] < 0.5 && temperatures[1] < 0.5 && temperatures[2] < 0.5)
       {
         return (-80);
       }
@@ -368,7 +372,10 @@ float BMSModule::getModuleVoltage()
   moduleVolt = 0;
   for (int I; I < 8; I++)
   {
-    moduleVolt = moduleVolt + cellVolt[I];
+    if (cellVolt[I] > IgnoreCell && cellVolt[I] < 60.0)
+    {
+      moduleVolt = moduleVolt + cellVolt[I];
+    }
   }
   return moduleVolt;
 }
