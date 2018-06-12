@@ -17,6 +17,7 @@ EEPROMSettings settings;
 //Simple BMS Settings//
 int CAP = 100; //battery size in Ah
 int Pstrings = 1; // strings in parallel used to divide voltage of pack
+int ESSmode = 1; //turn on ESS mode, does not respond to key switching
 
 //Simple BMS V2 wiring//
 const int ACUR1 = A0; // current 1
@@ -229,95 +230,126 @@ void loop()
   }
 
   //contcon();
-
-  switch (bmsstatus)
+  if (ESSmode == 1)
   {
-    case (Boot):
-      Discharge = 0;
+    if (bms.getHighCellVolt() > settings.balanceVoltage)
+    {
+      bms.balanceCells();
+      balancecells = 1;
+    }
+    else
+    {
+      balancecells = 0;
+    }
+    if (bms.getLowCellVolt() < settings.UnderVSetpoint)
+    {
+      digitalWrite(OUT1, LOW);//turn off discharge
+    }
+    else
+    {
+      digitalWrite(OUT1, HIGH);//turn on discharge
+    }
+
+    if (bms.getHighCellVolt() > settings.OverVSetpoint)
+    {
+      digitalWrite(OUT3, LOW);//turn off charger
+    }
+    else
+    {
+      digitalWrite(OUT3, HIGH);//turn on charger
+    }
+  }
+  else
+  {
+    switch (bmsstatus)
+    {
+      case (Boot):
+        Discharge = 0;
 
 
-      bmsstatus = Ready;
-      break;
-
-    case (Ready):
-      Discharge = 0;
-      if (bms.getHighCellVolt() > settings.balanceVoltage)
-      {
-        bms.balanceCells();
-        balancecells = 1;
-      }
-      else
-      {
-        balancecells = 0;
-      }
-      if (digitalRead(IN2) == HIGH && (settings.balanceVoltage + settings.balanceHyst) > bms.getHighCellVolt()) //detect AC present for charging and check not balancing
-      {
-        bmsstatus = Charge;
-      }
-      if (digitalRead(IN1) == HIGH) //detect Key ON
-      {
-        bmsstatus = Precharge;
-        Pretimer = millis();
-      }
-
-      break;
-
-    case (Precharge):
-      Discharge = 0;
-      Prechargecon();
-      break;
-
-
-    case (Drive):
-      Discharge = 1;
-      if (digitalRead(IN1) == LOW)//Key OFF
-      {
-        digitalWrite(OUT4, LOW);
-        digitalWrite(OUT1, LOW);
-
-        contctrl = 0; //turn off out 5 and 6
         bmsstatus = Ready;
-      }
+        break;
 
-      break;
+      case (Ready):
+        Discharge = 0;
+        if (bms.getHighCellVolt() > settings.balanceVoltage)
+        {
+          bms.balanceCells();
+          balancecells = 1;
+        }
+        else
+        {
+          balancecells = 0;
+        }
+        if (digitalRead(IN2) == HIGH && (settings.balanceVoltage + settings.balanceHyst) > bms.getHighCellVolt()) //detect AC present for charging and check not balancing
+        {
+          bmsstatus = Charge;
+        }
+        if (digitalRead(IN1) == HIGH) //detect Key ON
+        {
+          bmsstatus = Precharge;
+          Pretimer = millis();
+        }
 
-    case (Charge):
-      Discharge = 0;
-      digitalWrite(OUT3, HIGH);//enable charger
-      if (bms.getHighCellVolt() > settings.balanceVoltage)
-      {
-        bms.balanceCells();
-        balancecells = 1;
-      }
-      else
-      {
-        balancecells = 0;
-      }
-      if (bms.getHighCellVolt() > settings.OverVSetpoint);
-      {
-        digitalWrite(OUT3, LOW);//turn off charger
-        bmsstatus = Ready;
-      }
-      if (digitalRead(IN2) == LOW)//detect AC not present for charging
-      {
-        digitalWrite(OUT3, LOW);//turn off charger
-        bmsstatus = Ready;
-      }
-      break;
+        break;
 
-    case (Error):
-      Discharge = 0;
+      case (Precharge):
+        Discharge = 0;
+        Prechargecon();
+        break;
 
-      if (digitalRead(IN2) == HIGH) //detect AC present for charging
-      {
-        bmsstatus = Charge;
-      }
-      if (bms.getLowCellVolt() >= settings.UnderVSetpoint);
-      {
-        bmsstatus = Ready;
-      }
 
-      break;
+      case (Drive):
+        Discharge = 1;
+        if (digitalRead(IN1) == LOW)//Key OFF
+        {
+          digitalWrite(OUT4, LOW);
+          digitalWrite(OUT1, LOW);
+
+          contctrl = 0; //turn off out 5 and 6
+          bmsstatus = Ready;
+        }
+
+        break;
+
+      case (Charge):
+        Discharge = 0;
+        digitalWrite(OUT3, HIGH);//enable charger
+        if (bms.getHighCellVolt() > settings.balanceVoltage)
+        {
+          bms.balanceCells();
+          balancecells = 1;
+        }
+        else
+        {
+          balancecells = 0;
+        }
+        if (bms.getHighCellVolt() > settings.OverVSetpoint);
+        {
+          digitalWrite(OUT3, LOW);//turn off charger
+          bmsstatus = Ready;
+        }
+        if (digitalRead(IN2) == LOW)//detect AC not present for charging
+        {
+          digitalWrite(OUT3, LOW);//turn off charger
+          bmsstatus = Ready;
+        }
+        break;
+
+      case (Error):
+        Discharge = 0;
+
+        if (digitalRead(IN2) == HIGH) //detect AC present for charging
+        {
+          bmsstatus = Charge;
+        }
+        if (bms.getLowCellVolt() >= settings.UnderVSetpoint);
+        {
+          bmsstatus = Ready;
+        }
+
+        break;
+    }
   }
   if (cursens == Analogue)
   {
@@ -397,32 +429,39 @@ void printbmsstat()
   SERIALCONSOLE.println();
   SERIALCONSOLE.println();
   SERIALCONSOLE.print("BMS Status : ");
-  SERIALCONSOLE.print(bmsstatus);
-  switch (bmsstatus)
+  if (ESSmode == 1)
   {
-    case (Boot):
-      SERIALCONSOLE.print(" Boot ");
-      break;
+    SERIALCONSOLE.print("ESS Mode ");
+  }
+  else
+  {
+    SERIALCONSOLE.print(bmsstatus);
+    switch (bmsstatus)
+    {
+      case (Boot):
+        SERIALCONSOLE.print(" Boot ");
+        break;
 
-    case (Ready):
-      SERIALCONSOLE.print(" Ready ");
-      break;
+      case (Ready):
+        SERIALCONSOLE.print(" Ready ");
+        break;
 
-    case (Precharge):
-      SERIALCONSOLE.print(" Precharge ");
-      break;
+      case (Precharge):
+        SERIALCONSOLE.print(" Precharge ");
+        break;
 
-    case (Drive):
-      SERIALCONSOLE.print(" Drive ");
-      break;
+      case (Drive):
+        SERIALCONSOLE.print(" Drive ");
+        break;
 
-    case (Charge):
-      SERIALCONSOLE.print(" Charge ");
-      break;
+      case (Charge):
+        SERIALCONSOLE.print(" Charge ");
+        break;
 
-    case (Error):
-      SERIALCONSOLE.print(" Error ");
-      break;
+      case (Error):
+        SERIALCONSOLE.print(" Error ");
+        break;
+    }
   }
   SERIALCONSOLE.print("  ");
   if (digitalRead(IN2) == HIGH)
