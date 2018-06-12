@@ -232,7 +232,7 @@ void loop()
   //contcon();
   if (ESSmode == 1)
   {
-    if (bms.getHighCellVolt() > settings.balanceVoltage)
+    if (bms.getHighCellVolt() > settings.balanceVoltage && bms.getHighCellVolt() > bms.getLowCellVolt() + settings.balanceHyst)
     {
       bms.balanceCells();
       balancecells = 1;
@@ -272,7 +272,7 @@ void loop()
 
       case (Ready):
         Discharge = 0;
-        if (bms.getHighCellVolt() > settings.balanceVoltage)
+        if (bms.getHighCellVolt() > settings.balanceVoltage && bms.getHighCellVolt() > bms.getLowCellVolt() + settings.balanceHyst)
         {
           bms.balanceCells();
           balancecells = 1;
@@ -474,7 +474,7 @@ void printbmsstat()
   }
   if (balancecells == 1)
   {
-     SERIALCONSOLE.print("|Balancing Active");
+    SERIALCONSOLE.print("|Balancing Active");
   }
 }
 
