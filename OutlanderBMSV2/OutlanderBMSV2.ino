@@ -441,7 +441,7 @@ void printbmsstat()
     {
       SERIALCONSOLE.print(": OverVoltage ");
     }
-    if (bms.getLowCellVolt() > settings.UnderVSetpoint &&bms.getHighCellVolt() > settings.OverVSetpoint)
+    if (bms.getLowCellVolt() > settings.UnderVSetpoint &&bms.getHighCellVolt() < settings.OverVSetpoint)
     {
           
       SERIALCONSOLE.print(": Happy ");
