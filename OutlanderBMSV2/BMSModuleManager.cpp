@@ -354,7 +354,7 @@ float BMSModuleManager::getHighCellVolt()
     {
         if (modules[x].isExisting()) 
         {
-           if (modules[x].getHighCellV() <  HighCellVolt)  HighCellVolt = modules[x].getHighCellV(); 
+           if (modules[x].getHighCellV() >  HighCellVolt)  HighCellVolt = modules[x].getHighCellV(); 
         }
     }
     return HighCellVolt;
