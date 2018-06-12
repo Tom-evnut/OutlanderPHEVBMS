@@ -432,6 +432,21 @@ void printbmsstat()
   if (ESSmode == 1)
   {
     SERIALCONSOLE.print("ESS Mode ");
+    
+    if (bms.getLowCellVolt() < settings.UnderVSetpoint)
+    {
+      SERIALCONSOLE.print(": UnderVoltage ");
+    }
+        if (bms.getHighCellVolt() > settings.OverVSetpoint)
+    {
+      SERIALCONSOLE.print(": OverVoltage ");
+    }
+    if (bms.getLowCellVolt() > settings.UnderVSetpoint &&bms.getHighCellVolt() > settings.OverVSetpoint)
+    {
+          
+      SERIALCONSOLE.print(": Happy ");
+    
+    }
   }
   else
   {
