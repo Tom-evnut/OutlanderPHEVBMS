@@ -349,7 +349,7 @@ float BMSModuleManager::getLowCellVolt()
 
 float BMSModuleManager::getHighCellVolt()
 {
-  HighCellVolt = 5.0;
+  HighCellVolt = 0.0;
     for (int x = 1; x <= MAX_MODULE_ADDR; x++)
     {
         if (modules[x].isExisting()) 
