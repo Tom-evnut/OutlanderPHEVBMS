@@ -324,7 +324,7 @@ void loop()
         {
           balancecells = 0;
         }
-        if (bms.getHighCellVolt() > settings.OverVSetpoint);
+        if (bms.getHighCellVolt() > settings.OverVSetpoint)
         {
           digitalWrite(OUT3, LOW);//turn off charger
           bmsstatus = Ready;
@@ -343,7 +343,7 @@ void loop()
         {
           bmsstatus = Charge;
         }
-        if (bms.getLowCellVolt() >= settings.UnderVSetpoint);
+        if (bms.getLowCellVolt() >= settings.UnderVSetpoint)
         {
           bmsstatus = Ready;
         }
@@ -392,7 +392,7 @@ void loop()
 void alarmupdate()
 {
   alarm[0] = 0;
-  if (bms.getHighCellVolt() > settings.OverVSetpoint);
+  if (bms.getHighCellVolt() > settings.OverVSetpoint)
   {
     alarm[0] = 0x04;
   }
