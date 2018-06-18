@@ -811,14 +811,14 @@ void VEcan() //communication with Victron system over CAN
 {
   msg.id  = 0x351;
   msg.len = 8;
-  msg.buf[0] = lowByte(uint16_t(settings.OverVSetpoint * bms.seriescells() / Pstrings) * 10);
-  msg.buf[1] = highByte(uint16_t(settings.OverVSetpoint * bms.seriescells() / Pstrings) * 10);
+  msg.buf[0] = lowByte(uint16_t((settings.OverVSetpoint * bms.seriescells() / Pstrings) * 10));
+  msg.buf[1] = highByte(uint16_t((settings.OverVSetpoint * bms.seriescells() / Pstrings) * 10));
   msg.buf[2] = lowByte(chargecurrent);
   msg.buf[3] = highByte(chargecurrent);
   msg.buf[4] = lowByte(discurrent );
   msg.buf[5] = highByte(discurrent);
-  msg.buf[6] = lowByte(uint16_t(settings.UnderVSetpoint * bms.seriescells() / Pstrings) * 10);
-  msg.buf[7] = highByte(uint16_t(settings.UnderVSetpoint * bms.seriescells() / Pstrings) * 10);
+  msg.buf[6] = lowByte(uint16_t((settings.UnderVSetpoint * bms.seriescells() / Pstrings) * 10));
+  msg.buf[7] = highByte(uint16_t((settings.UnderVSetpoint * bms.seriescells() / Pstrings) * 10));
   Can0.write(msg);
 
   msg.id  = 0x355;
