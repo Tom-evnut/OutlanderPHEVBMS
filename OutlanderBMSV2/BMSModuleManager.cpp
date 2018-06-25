@@ -34,7 +34,7 @@ int BMSModuleManager::seriescells()
 void BMSModuleManager::decodecan(CAN_message_t &msg)
 { 
  int Id = msg.id & 0x00F;
- int CMU = ((msg.id & 0x0F0) >> 4) - 1;
+ int CMU = ((msg.id & 0x0F0) >> 4);
  modules[CMU].setExists(true);
  modules[CMU].decodecan(Id,msg);
 }
