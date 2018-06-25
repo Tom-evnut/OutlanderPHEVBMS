@@ -127,7 +127,7 @@ int balancecells;
 int debug = 1;
 int inputcheck = 0; //read digital inputs
 int outputcheck = 0; //check outputs
-int candebug = 0; //view can frames
+int candebug = 1; //view can frames
 int debugCur = 0;
 int menuload = 0;
 
@@ -156,6 +156,7 @@ void loadSettings()
 
 CAN_message_t msg;
 CAN_message_t inMsg;
+CAN_filter_t filter;
 
 uint32_t lastUpdate;
 
@@ -180,6 +181,21 @@ void setup()
   pinMode(led, OUTPUT);
 
   Can0.begin(500000);
+
+  //set filters for standard
+  for (int i = 0; i < 8; i++)
+  {
+    Can0.getFilter(filter, i);
+    filter.flags.extended = 0;
+    Can0.setFilter(filter, i);
+  }
+ //set filters for extended
+  for (int i = 9; i < 13; i++)
+  {
+    Can0.getFilter(filter, i);
+    filter.flags.extended = 1;
+    Can0.setFilter(filter, i);
+  }
 
   //if using enable pins on a transceiver they need to be set on
 
@@ -432,20 +448,20 @@ void printbmsstat()
   if (ESSmode == 1)
   {
     SERIALCONSOLE.print("ESS Mode ");
-    
+
     if (bms.getLowCellVolt() < settings.UnderVSetpoint)
     {
       SERIALCONSOLE.print(": UnderVoltage ");
     }
-        if (bms.getHighCellVolt() > settings.OverVSetpoint)
+    if (bms.getHighCellVolt() > settings.OverVSetpoint)
     {
       SERIALCONSOLE.print(": OverVoltage ");
     }
-    if (bms.getLowCellVolt() > settings.UnderVSetpoint &&bms.getHighCellVolt() < settings.OverVSetpoint)
+    if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint)
     {
-          
+
       SERIALCONSOLE.print(": Happy ");
-    
+
     }
   }
   else
@@ -1270,10 +1286,10 @@ void canread()
   {
     bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
   }
-   if (inMsg.id > 0x80000600 && inMsg.id < 0x80000800)//do mitsubishi magic if ids are ones identified to be modules
+  if (inMsg.id > 0x80000600 && inMsg.id < 0x80000800)//do mitsubishi magic if ids are ones identified to be modules
   {
     bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
-  } 
+  }
 
   if (candebug == 1)
   {
