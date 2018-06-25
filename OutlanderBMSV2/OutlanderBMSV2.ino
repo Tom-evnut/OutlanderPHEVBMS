@@ -1266,7 +1266,7 @@ void canread()
       break;
   }
 
-  if (inMsg.id > 0x600 && inMsg.id < 0x690)//do mitsubishi magic if ids are ones identified to be modules
+  if (inMsg.id > 0x600 && inMsg.id < 0x800)//do mitsubishi magic if ids are ones identified to be modules
   {
     bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
   }
