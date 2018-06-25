@@ -1270,6 +1270,10 @@ void canread()
   {
     bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
   }
+   if (inMsg.id > 0x80000600 && inMsg.id < 0x80000800)//do mitsubishi magic if ids are ones identified to be modules
+  {
+    bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
+  } 
 
   if (candebug == 1)
   {
