@@ -36,7 +36,7 @@ void BMSModuleManager::decodecan(CAN_message_t &msg)
   int Id, CMU =0;
   if ((msg.id & 0x80000000) == 0x80000000)
   {
-    CMU = ((msg.id & 0x1FFFFFFF) >> 4);
+    CMU = (((msg.id & 0x00000FF0)-0x600)>> 4);
     Id = msg.id & 0x00F;
     Serial.println();
     Serial.print("Long ID recieved :");
@@ -46,7 +46,7 @@ void BMSModuleManager::decodecan(CAN_message_t &msg)
   else
   {
     Id = msg.id & 0x00F;
-    CMU = ((msg.id & 0x0F0) >> 4);
+    CMU = (((msg.id & 0xFF0)-0x600) >> 4);
   }
   modules[CMU].setExists(true);
   modules[CMU].decodecan(Id, msg);
