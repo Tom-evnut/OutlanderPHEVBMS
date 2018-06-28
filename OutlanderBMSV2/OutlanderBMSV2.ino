@@ -189,7 +189,7 @@ void setup()
     filter.flags.extended = 0;
     Can0.setFilter(filter, i);
   }
- //set filters for extended
+  //set filters for extended
   for (int i = 9; i < 13; i++)
   {
     Can0.getFilter(filter, i);
@@ -263,7 +263,10 @@ void loop()
     }
     else
     {
-      digitalWrite(OUT1, HIGH);//turn on discharge
+      if (outputcheck != 1)
+      {
+        digitalWrite(OUT1, HIGH);//turn on discharge
+      }
     }
 
     if (bms.getHighCellVolt() > settings.OverVSetpoint)
@@ -272,7 +275,10 @@ void loop()
     }
     else
     {
-      digitalWrite(OUT3, HIGH);//turn on charger
+      if (outputcheck != 1)
+      {
+        digitalWrite(OUT3, HIGH);//turn on charger
+      }
     }
   }
   else
@@ -907,13 +913,13 @@ void VEcan() //communication with Victron system over CAN
       msg.len = 8;
       if (bms.getLowCellVolt() < settings.balanceVoltage)
       {
-        msg.buf[0] = lowByte(uint16_t(settings.balanceVoltage * 1000));
-        msg.buf[1] = highByte(uint16_t(settings.balanceVoltage * 1000));
+        msg.buf[0] = highByte(uint16_t(settings.balanceVoltage * 1000));
+        msg.buf[1] = lowByte(uint16_t(settings.balanceVoltage * 1000));
       }
       else
       {
-        msg.buf[0] = lowByte(uint16_t(bms.getLowCellVolt() * 1000));
-        msg.buf[1] = highByte(uint16_t(bms.getLowCellVolt() * 1000));
+        msg.buf[0] = highByte(uint16_t(bms.getLowCellVolt() * 1000));
+        msg.buf[1] = lowByte(uint16_t(bms.getLowCellVolt() * 1000));
       }
       msg.buf[2] =  0x01;
       msg.buf[3] =  0x04;
