@@ -281,12 +281,14 @@ void loop()
     if (bms.getLowCellVolt() < settings.UnderVSetpoint)
     {
       digitalWrite(OUT1, LOW);//turn off discharge
+      contctrl = 0;
     }
     else
     {
       if (outputcheck != 1)
       {
         digitalWrite(OUT1, HIGH);//turn on discharge
+        contctrl = 1;
       }
     }
 
