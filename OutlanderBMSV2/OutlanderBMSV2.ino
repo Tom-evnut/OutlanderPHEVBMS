@@ -138,8 +138,8 @@ ADC *adc = new ADC(); // adc object
 void loadSettings()
 {
   Logger::console("Resetting to factory defaults");
-  settings.version = 0;
-  settings.checksum = 0;
+  settings.version = 20;
+  settings.checksum = 2;
   settings.canSpeed = 500000;
   settings.batteryID = 0x01; //in the future should be 0xFF to force it to ask for an address
   settings.OverVSetpoint = 4.1f;
@@ -248,7 +248,7 @@ void loop()
     menu();
   }
 
-  //contcon();
+  contcon();
   if (ESSmode == 1)
   {
     if (digitalRead(IN1) == LOW)//Key OFF
@@ -762,7 +762,7 @@ void contcon()
   {
     if ((contctrl & 1) == 0)
     {
-      //analogWrite(OUT5, 0);
+      analogWrite(OUT5, 0);
       contstat = contstat & 254;
     }
     if ((contctrl & 2) == 0)
@@ -775,12 +775,12 @@ void contcon()
     {
       if (conttimer == 0)
       {
-        //analogWrite(OUT5, 255);
+        analogWrite(OUT5, 255);
         conttimer = millis() + pulltime ;
       }
       if (conttimer < millis())
       {
-        //analogWrite(OUT5, conthold);
+        analogWrite(OUT5, conthold);
         contstat = contstat | 1;
         conttimer = 0;
       }
@@ -812,7 +812,7 @@ void contcon()
   }
   if (contctrl == 0)
   {
-    //analogWrite(OUT5, 0);
+    analogWrite(OUT5, 0);
     analogWrite(OUT6, 0);
   }
 }
