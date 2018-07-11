@@ -553,8 +553,14 @@ void printbmsstat()
     if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint)
     {
 
-      SERIALCONSOLE.print(": Happy ");
-
+      if ( bmsstatus == Error)
+      {
+        SERIALCONSOLE.print(": UNhappy:");
+      }
+      else
+      {
+        SERIALCONSOLE.print(": Happy ");
+      }
     }
   }
   else
