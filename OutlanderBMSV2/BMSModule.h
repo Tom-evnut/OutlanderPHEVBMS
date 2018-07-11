@@ -7,6 +7,7 @@ class BMSModule
     BMSModule();
     void decodecan(int Id,CAN_message_t &msg);
     void readStatus();
+    void clearmodule();
      int getscells();
     bool readModuleValues();
     float getCellVoltage(int cell);
