@@ -49,11 +49,11 @@ byte bmsstatus = 0;
 //
 int cursens = 2;
 //Current sensor values
-#define VoltSOC 0
+#define undefined 0
 #define Analogue 1
 #define Canbus 2
 //
-
+int VoltSOC = 0;
 
 int Discharge;
 
@@ -611,8 +611,6 @@ void printbmsstat()
 
 void getcurrent()
 {
-  if (cursens != VoltSOC)
-  {
     if (cursens == Analogue)
     {
       if (currentact < 19000 && currentact > -19000)
@@ -737,7 +735,6 @@ void getcurrent()
       }
     }
     RawCur = 0;
-  }
 }
 
 void updateSOC()
@@ -758,7 +755,7 @@ void updateSOC()
       SERIALCONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
     }
   }
-  if (cursens == VoltSOC)
+  if (VoltSOC == 1)
   {
     SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), socvolt[0], socvolt[2], socvolt[1], socvolt[3]);
 
