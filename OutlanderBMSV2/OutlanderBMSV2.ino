@@ -17,6 +17,7 @@ EEPROMSettings settings;
 //Simple BMS Settings//
 int CAP = 100; //battery size in Ah
 int Pstrings = 1; // strings in parallel used to divide voltage of pack
+int Scells = 14;//Cells in series
 int ESSmode = 1; //turn on ESS mode, does not respond to key switching
 float storagedelta = 0.3; //in ESS mode in 1 high changes charge and discharge limits by this amount
 
@@ -929,14 +930,14 @@ void VEcan() //communication with Victron system over CAN
 {
   msg.id  = 0x351;
   msg.len = 8;
-  msg.buf[0] = lowByte(uint16_t((settings.ChargeVsetpoint * cellspresent / Pstrings) * 10));
-  msg.buf[1] = highByte(uint16_t((settings.ChargeVsetpoint * cellspresent / Pstrings) * 10));
+  msg.buf[0] = lowByte(uint16_t((settings.ChargeVsetpoint * Scells) * 10));
+  msg.buf[1] = highByte(uint16_t((settings.ChargeVsetpoint * Scells) * 10));
   msg.buf[2] = lowByte(chargecurrent);
   msg.buf[3] = highByte(chargecurrent);
   msg.buf[4] = lowByte(discurrent );
   msg.buf[5] = highByte(discurrent);
-  msg.buf[6] = lowByte(uint16_t((settings.DischVsetpoint * cellspresent / Pstrings) * 10));
-  msg.buf[7] = highByte(uint16_t((settings.DischVsetpoint * cellspresent / Pstrings) * 10));
+  msg.buf[6] = lowByte(uint16_t((settings.DischVsetpoint * Scells) * 10));
+  msg.buf[7] = highByte(uint16_t((settings.DischVsetpoint * Scells) * 10));
   Can0.write(msg);
 
   msg.id  = 0x355;
@@ -1281,6 +1282,9 @@ void menu()
         SERIALCONSOLE.print(Pstrings);
         SERIALCONSOLE.print(" Slave strings in parallel - c");
         SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.print(Scells);
+        SERIALCONSOLE.print(" Cells in series - s");
+        SERIALCONSOLE.println("  ");        
         break;
       case 101: //e dispaly settings
         SERIALCONSOLE.println("  ");
@@ -1324,6 +1328,15 @@ void menu()
           Pstrings = Serial.parseInt();
           SERIALCONSOLE.print(Pstrings);
           SERIALCONSOLE.print("Slave strings in parallel");
+        }
+        break;
+
+      case 's': //
+        if (Serial.available() > 0)
+        {
+          Scells = Serial.parseInt();
+          SERIALCONSOLE.print(Scells );
+          SERIALCONSOLE.print(" Cells in series");
         }
         break;
 
