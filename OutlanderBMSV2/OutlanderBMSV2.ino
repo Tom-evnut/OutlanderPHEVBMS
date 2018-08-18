@@ -45,13 +45,11 @@ byte bmsstatus = 0;
 #define Precharge 4
 #define Error 5
 //
-int cursens = 2;
+
 //Current sensor values
 #define undefined 0
 #define Analogue 1
 #define Canbus 2
-//
-int VoltSOC = 0;
 
 int Discharge;
 
@@ -95,7 +93,6 @@ signed long CANmilliamps;
 
 //variables for current calulation
 int value;
-int invertcur = 0;
 uint16_t offset1 = 1735;
 uint16_t offset2 = 1733;
 int highconv = 285;
@@ -164,7 +161,11 @@ void loadSettings()
   settings.socvolt[1] = 10; //Voltage and SOC curve for voltage based SOC calc
   settings.socvolt[2] = 4100; //Voltage and SOC curve for voltage based SOC calc
   settings.socvolt[3] = 90; //Voltage and SOC curve for voltage based SOC calc
+  settings.invertcur = 0; //Invert current sensor direction
+  settings.cursens = 2;
+  settings.voltsoc = 0; //SOC purely voltage based
 }
+
 
 CAN_message_t msg;
 CAN_message_t inMsg;
@@ -454,7 +455,7 @@ void loop()
         break;
     }
   }
-  if (cursens == Analogue)
+  if (settings.cursens == Analogue)
   {
     getcurrent();
   }
@@ -621,118 +622,93 @@ void printbmsstat()
 
 void getcurrent()
 {
-    if (cursens == Analogue)
+  if (settings.cursens == Analogue)
+  {
+    if (currentact < 19000 && currentact > -19000)
     {
-      if (currentact < 19000 && currentact > -19000)
-      {
-        sensor = 1;
-        adc->startContinuous(ACUR1, ADC_0);
-      }
-      else
-      {
-        sensor = 2;
-        adc->startContinuous(ACUR2, ADC_0);
-      }
+      sensor = 1;
+      adc->startContinuous(ACUR1, ADC_0);
+    }
+    else
+    {
+      sensor = 2;
+      adc->startContinuous(ACUR2, ADC_0);
+    }
 
-      if (sensor == 1)
+    if (sensor == 1)
+    {
+      if (debugCur != 0)
       {
-        if (debugCur != 0)
-        {
-          SERIALCONSOLE.print("Low Range: ");
-          SERIALCONSOLE.print("Value ADC0: ");
-        }
-        value = (uint16_t)adc->analogReadContinuous(ADC_0); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
-        if (debugCur != 0)
-        {
-          SERIALCONSOLE.print(value * 3.3 / adc->getMaxValue(ADC_0), 5);
-          SERIALCONSOLE.print("  ");
-        }
-        RawCur = (float(value * 3300 / adc->getMaxValue(ADC_0)) - offset1) * 15.7;
-        if (value < 100 || value > (adc->getMaxValue(ADC_0) - 100))
-        {
-          RawCur = 0;
-        }
-        if (debugCur != 0)
-        {
-          SERIALCONSOLE.print("  ");
-          SERIALCONSOLE.print(RawCur);
-          SERIALCONSOLE.print("mA");
-          SERIALCONSOLE.print("  ");
-        }
+        SERIALCONSOLE.print("Low Range: ");
+        SERIALCONSOLE.print("Value ADC0: ");
       }
-      else
+      value = (uint16_t)adc->analogReadContinuous(ADC_0); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
+      if (debugCur != 0)
       {
-        if (debugCur != 0)
-        {
-          SERIALCONSOLE.print("High Range: ");
-          SERIALCONSOLE.print("Value ADC0: ");
-        }
-        value = (uint16_t)adc->analogReadContinuous(ADC_0); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
-        if (debugCur != 0)
-        {
-          SERIALCONSOLE.print(value * 3.3 / adc->getMaxValue(ADC_0), 5);
-          SERIALCONSOLE.print("  ");
-        }
-        RawCur = (float(value * 3300 / adc->getMaxValue(ADC_0)) - offset2) * highconv;
-        if (value < 100 || value > (adc->getMaxValue(ADC_0) - 100))
-        {
-          RawCur = 0;
-        }
-        if (debugCur != 0)
-        {
-          SERIALCONSOLE.print("  ");
-          SERIALCONSOLE.print(RawCur);
-          SERIALCONSOLE.print("mA");
-          SERIALCONSOLE.print("  ");
-        }
+        SERIALCONSOLE.print(value * 3.3 / adc->getMaxValue(ADC_0), 5);
+        SERIALCONSOLE.print("  ");
       }
-    }
-    if (invertcur == 1)
-    {
-      RawCur = RawCur * -1;
-    }
-    RunningAverageBuffer[NextRunningAverage++] = RawCur;
-    if (NextRunningAverage >= RunningAverageCount)
-    {
-      NextRunningAverage = 0;
-    }
-    float RunningAverageCur = 0;
-    for (int i = 0; i < RunningAverageCount; ++i)
-    {
-      RunningAverageCur += RunningAverageBuffer[i];
-    }
-    RunningAverageCur /= RunningAverageCount;
-
-    currentact = RunningAverageCur;
-
-    if (cursens == Analogue)
-    {
-      if (sensor == 1)
+      RawCur = (float(value * 3300 / adc->getMaxValue(ADC_0)) - offset1) * 15.7;
+      if (value < 100 || value > (adc->getMaxValue(ADC_0) - 100))
       {
-        if (currentact > 500 || currentact < -500 )
-        {
-          ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
-          lasttime = millis();
-        }
-        else
-        {
-          lasttime = millis();
-        }
+        RawCur = 0;
       }
-      if (sensor == 2)
+      if (debugCur != 0)
       {
-        if (currentact > 180000 || currentact < -18000 )
-        {
-          ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
-          lasttime = millis();
-        }
-        else
-        {
-          lasttime = millis();
-        }
+        SERIALCONSOLE.print("  ");
+        SERIALCONSOLE.print(RawCur);
+        SERIALCONSOLE.print("mA");
+        SERIALCONSOLE.print("  ");
       }
     }
     else
+    {
+      if (debugCur != 0)
+      {
+        SERIALCONSOLE.print("High Range: ");
+        SERIALCONSOLE.print("Value ADC0: ");
+      }
+      value = (uint16_t)adc->analogReadContinuous(ADC_0); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
+      if (debugCur != 0)
+      {
+        SERIALCONSOLE.print(value * 3.3 / adc->getMaxValue(ADC_0), 5);
+        SERIALCONSOLE.print("  ");
+      }
+      RawCur = (float(value * 3300 / adc->getMaxValue(ADC_0)) - offset2) * highconv;
+      if (value < 100 || value > (adc->getMaxValue(ADC_0) - 100))
+      {
+        RawCur = 0;
+      }
+      if (debugCur != 0)
+      {
+        SERIALCONSOLE.print("  ");
+        SERIALCONSOLE.print(RawCur);
+        SERIALCONSOLE.print("mA");
+        SERIALCONSOLE.print("  ");
+      }
+    }
+  }
+  if (settings.invertcur == 1)
+  {
+    RawCur = RawCur * -1;
+  }
+  RunningAverageBuffer[NextRunningAverage++] = RawCur;
+  if (NextRunningAverage >= RunningAverageCount)
+  {
+    NextRunningAverage = 0;
+  }
+  float RunningAverageCur = 0;
+  for (int i = 0; i < RunningAverageCount; ++i)
+  {
+    RunningAverageCur += RunningAverageBuffer[i];
+  }
+  RunningAverageCur /= RunningAverageCount;
+
+  currentact = RunningAverageCur;
+
+  if (settings.cursens == Analogue)
+  {
+    if (sensor == 1)
     {
       if (currentact > 500 || currentact < -500 )
       {
@@ -744,7 +720,32 @@ void getcurrent()
         lasttime = millis();
       }
     }
-    RawCur = 0;
+    if (sensor == 2)
+    {
+      if (currentact > 180000 || currentact < -18000 )
+      {
+        ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
+        lasttime = millis();
+      }
+      else
+      {
+        lasttime = millis();
+      }
+    }
+  }
+  else
+  {
+    if (currentact > 500 || currentact < -500 )
+    {
+      ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
+      lasttime = millis();
+    }
+    else
+    {
+      lasttime = millis();
+    }
+  }
+  RawCur = 0;
 }
 
 void updateSOC()
@@ -765,7 +766,7 @@ void updateSOC()
       SERIALCONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
     }
   }
-  if (VoltSOC == 1)
+  if (settings.voltsoc == 1)
   {
     SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
 
@@ -786,7 +787,7 @@ void updateSOC()
 
   if (debug != 0)
   {
-    if (cursens == Analogue)
+    if (settings.cursens == Analogue)
     {
       if (sensor == 1)
       {
@@ -1195,7 +1196,13 @@ void menu()
 
       case '1':
         menuload = 1;
-        invertcur = !invertcur;
+        settings.invertcur = !settings.invertcur;
+        incomingByte = 'c';
+        break;
+
+      case '2':
+        menuload = 1;
+        settings.voltsoc = !settings.voltsoc;
         incomingByte = 'c';
         break;
 
@@ -1206,16 +1213,16 @@ void menu()
         break;
 
       case 115: //s for switch sensor
-        if (cursens == Analogue)
+        if (settings.cursens == Analogue)
         {
-          cursens = Canbus;
+          settings.cursens = Canbus;
           SERIALCONSOLE.println("  ");
           SERIALCONSOLE.print(" CANbus Current Sensor ");
           SERIALCONSOLE.println("  ");
         }
         else
         {
-          cursens = Analogue;
+          settings.cursens = Analogue;
           SERIALCONSOLE.println("  ");
           SERIALCONSOLE.print(" Analogue Current Sensor ");
           SERIALCONSOLE.println("  ");
@@ -1522,7 +1529,9 @@ void menu()
         SERIALCONSOLE.println("c - To calibrate sensor offset");
         SERIALCONSOLE.println("s - To switch between Current Sensors");
         SERIALCONSOLE.print("1 - invert current :");
-        SERIALCONSOLE.println(invertcur);
+        SERIALCONSOLE.println(settings.invertcur);
+        SERIALCONSOLE.print("2 - Pure Voltage based SOC :");
+        SERIALCONSOLE.println(settings.voltsoc);
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 2;
         break;
@@ -1626,7 +1635,7 @@ void CAB300()
   {
     CANmilliamps = (0x80000000 - CANmilliamps) * -1;
   }
-  if (cursens == Canbus)
+  if (settings.cursens == Canbus)
   {
     RawCur = CANmilliamps;
     getcurrent();
