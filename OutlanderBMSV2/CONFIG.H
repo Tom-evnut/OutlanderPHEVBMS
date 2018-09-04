@@ -67,4 +67,7 @@ typedef struct {
   int invertcur;
   int cursens;
   int voltsoc;
+  int Pretime;
+  int conthold;
+  int Precurrent;
 } EEPROMSettings;
