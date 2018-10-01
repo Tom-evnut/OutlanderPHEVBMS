@@ -162,7 +162,7 @@ void loadSettings()
   settings.cursens = 2;
   settings.voltsoc = 0; //SOC purely voltage based
   settings.Pretime = 5000; //ms of precharge time
-    settings.conthold = 50; //holding duty cycle for contactor 0-255
+  settings.conthold = 50; //holding duty cycle for contactor 0-255
   settings.Precurrent = 1000; //ma before closing main contator
 }
 
@@ -1538,7 +1538,7 @@ void menu()
   {
     switch (incomingByte)
     {
-      case 'r'://restart
+      case 'R'://restart
         CPU_REBOOT ;
         break;
 
@@ -1673,28 +1673,30 @@ void canread()
   {
     bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
   }
-
-  if (candebug == 1)
+  if (debug == 1)
   {
-    Serial.print(millis());
-    if ((inMsg.id & 0x80000000) == 0x80000000)    // Determine if ID is standard (11 bits) or extended (29 bits)
-      sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (inMsg.id & 0x1FFFFFFF), inMsg.len);
-    else
-      sprintf(msgString, ",0x%.3lX,false,%1d", inMsg.id, inMsg.len);
+    if (candebug == 1)
+    {
+      Serial.print(millis());
+      if ((inMsg.id & 0x80000000) == 0x80000000)    // Determine if ID is standard (11 bits) or extended (29 bits)
+        sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (inMsg.id & 0x1FFFFFFF), inMsg.len);
+      else
+        sprintf(msgString, ",0x%.3lX,false,%1d", inMsg.id, inMsg.len);
 
-    Serial.print(msgString);
-
-    if ((inMsg.id & 0x40000000) == 0x40000000) {  // Determine if message is a remote request frame.
-      sprintf(msgString, " REMOTE REQUEST FRAME");
       Serial.print(msgString);
-    } else {
-      for (byte i = 0; i < inMsg.len; i++) {
-        sprintf(msgString, ", 0x%.2X", inMsg.buf[i]);
-        Serial.print(msgString);
-      }
-    }
 
-    Serial.println();
+      if ((inMsg.id & 0x40000000) == 0x40000000) {  // Determine if message is a remote request frame.
+        sprintf(msgString, " REMOTE REQUEST FRAME");
+        Serial.print(msgString);
+      } else {
+        for (byte i = 0; i < inMsg.len; i++) {
+          sprintf(msgString, ", 0x%.2X", inMsg.buf[i]);
+          Serial.print(msgString);
+        }
+      }
+
+      Serial.println();
+    }
   }
 }
 
