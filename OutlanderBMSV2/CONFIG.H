@@ -51,10 +51,13 @@ typedef struct {
   float DischVsetpoint;
   float ChargeHys;
   float StoreVsetpoint;
+  float WarnOff;
   float OverTSetpoint;
   float UnderTSetpoint;
   float ChargeTSetpoint;
   float DisTSetpoint;
+  float WarnToff;
+  float CellGap;
   uint8_t IgnoreTemp;
   float IgnoreVolt;
   float balanceVoltage;
@@ -71,7 +74,7 @@ typedef struct {
   int Pretime;
   int conthold;
   int Precurrent;
-      int ESSmode;
+  int ESSmode;
   int gaugelow;
   int gaugehigh;
 } EEPROMSettings;

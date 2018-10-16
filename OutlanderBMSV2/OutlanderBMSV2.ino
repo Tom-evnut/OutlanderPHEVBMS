@@ -70,7 +70,7 @@ int discurrent;
 
 uint16_t SOH = 100; // SOH place holder
 
-unsigned char alarm[4] = {0, 0, 0, 0};
+unsigned char alarm[4], warning[4]= {0, 0, 0, 0};
 unsigned char mes[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 unsigned char bmsname[8] = {'S', 'I', 'M', 'P', ' ', 'B', 'M', 'S'};
 unsigned char bmsmanu[8] = {'T', 'O', 'M', ' ', 'D', 'E', ' ', 'B'};
@@ -138,12 +138,15 @@ void loadSettings()
   settings.UnderVSetpoint = 3.0f;
   settings.ChargeVsetpoint = 4.1f;
   settings.ChargeHys = 0.2; // voltage drop required for charger to kick back on
+  settings.WarnOff = 0.1f; //voltage offset to raise a warning
   settings.StoreVsetpoint = 3.8; // V storage mode charge max
   settings.DischVsetpoint = 3.2f;
+  settings.CellGap = 0.2f; //max delta between high and low cell
   settings.OverTSetpoint = 65.0f;
   settings.UnderTSetpoint = -10.0f;
   settings.ChargeTSetpoint = 0.0f;
   settings.DisTSetpoint = 40.0f;
+  settings.WarnToff = 5.0f; //temp offset before raising warning
   settings.IgnoreTemp = 0; // 0 - use both sensors, 1 or 2 only use that sensor
   settings.IgnoreVolt = 0.5;//
   settings.balanceVoltage = 3.9f;
@@ -530,6 +533,7 @@ void loop()
         bmsstatus = Error;
       }
     }
+    alarmupdate();
     resetwdog();
   }
   if (millis() - cleartime > 5000)
@@ -540,8 +544,8 @@ void loop()
 
 void alarmupdate()
 {
-  alarm[0] = 0;
-  if (bms.getHighCellVolt() > settings.OverVSetpoint)
+  alarm[0] = 0x00;
+  if (settings.OverVSetpoint < bms.getHighCellVolt())
   {
     alarm[0] = 0x04;
   }
@@ -549,7 +553,7 @@ void alarmupdate()
   {
     alarm[0] |= 0x10;
   }
-  if (bms.getAvgTemperature() < settings.OverTSetpoint)
+  if (bms.getAvgTemperature() > settings.OverTSetpoint)
   {
     alarm[0] |= 0x40;
   }
@@ -557,6 +561,33 @@ void alarmupdate()
   if (bms.getAvgTemperature() < settings.UnderTSetpoint)
   {
     alarm[1] = 0x01;
+  }
+  alarm[3] = 0;
+  if ((bms.getHighCellVolt() - bms.getLowCellVolt()) > settings.CellGap)
+  {
+    alarm[3] = 0x01;
+  }
+
+  ///warnings///
+  warning[0] = 0;
+
+  if (bms.getHighCellVolt() > (settings.OverVSetpoint - settings.WarnOff))
+  {
+    warning[0] = 0x04;
+  }
+  if (bms.getLowCellVolt() < (settings.UnderVSetpoint + settings.WarnOff))
+  {
+    warning[0] |= 0x10;
+  }
+
+  if (bms.getAvgTemperature() > (settings.OverTSetpoint - settings.WarnToff))
+  {
+    warning[0] |= 0x40;
+  }
+  warning[1] = 0;
+  if (bms.getAvgTemperature() < (settings.UnderTSetpoint + settings.WarnToff))
+  {
+    warning[1] = 0x01;
   }
 }
 
@@ -1313,6 +1344,58 @@ void menu()
     }
     }
   */
+  if (menuload == 7)
+  {
+    switch (incomingByte)
+    {
+      case 101: //e dispaly settings
+        SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.println("Enter Variable Number and New value ");
+        SERIALCONSOLE.println("  ");
+        break;
+
+      case '1':
+        if (Serial.available() > 0)
+        {
+          settings.WarnOff = Serial.parseInt();
+          settings.WarnOff = settings.WarnOff * 0.001;
+          SERIALCONSOLE.print(settings.WarnOff);
+          SERIALCONSOLE.print(" mV Voltage Offset");
+          menuload = 1;
+          incomingByte = 'a';
+        }
+        break;
+
+      case '2':
+        if (Serial.available() > 0)
+        {
+          settings.CellGap = Serial.parseInt();
+          settings.CellGap = settings.CellGap * 0.001;
+          SERIALCONSOLE.print(settings.CellGap);
+          SERIALCONSOLE.print(" mV Cell Gap Alarm");
+          menuload = 1;
+          incomingByte = 'a';
+        }
+        break;
+
+      case '3':
+        if (Serial.available() > 0)
+        {
+          settings.WarnToff = Serial.parseInt();
+          SERIALCONSOLE.print(settings.WarnToff);
+          SERIALCONSOLE.print(" C Warning Offset");
+          menuload = 1;
+          incomingByte = 'a';
+        }
+        break;
+
+      case 113: //q to go back to main menu
+
+        menuload = 0;
+        incomingByte = 115;
+        break;
+    }
+  }
   if (menuload == 5)
   {
     switch (incomingByte)
@@ -1669,7 +1752,31 @@ void menu()
       case 'R'://restart
         CPU_REBOOT ;
         break;
+      case 'a': //Alarm and Warning settings
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println("Alarm and Warning Settings Menu");
+        SERIALCONSOLE.print("1 - Voltage Warning Offset mV:");
+        SERIALCONSOLE.println(settings.WarnOff * 1000, 0);
+        SERIALCONSOLE.print("2 - Cell Voltage Difference Alarm mV:");
+        SERIALCONSOLE.println(settings.CellGap * 1000, 0);
+        SERIALCONSOLE.print("3 - Temp Warning Offset C:");
+        SERIALCONSOLE.println(settings.WarnToff);
 
+        /*
+          SERIALCONSOLE.print("4 - Input Check :");
+          SERIALCONSOLE.println(inputcheck);
+          SERIALCONSOLE.print("5 - ESS mode :");
+          SERIALCONSOLE.println(settings.ESSmode);
+          SERIALCONSOLE.print("6 - Cells Present Reset :");
+          SERIALCONSOLE.println(cellspresent);
+          SERIALCONSOLE.println("q - Go back to menu");
+        */
+        menuload = 7;
+        break;
       case 'k': //contactor settings
         SERIALCONSOLE.println();
         SERIALCONSOLE.println();
@@ -1776,6 +1883,7 @@ void menu()
     SERIALCONSOLE.println("MENU");
     SERIALCONSOLE.println("Debugging Paused");
     SERIALCONSOLE.println("b - Battery Settings");
+    SERIALCONSOLE.println("a - Alarm and Warning Settings");
     SERIALCONSOLE.println("c - Current Sensor Calibration");
     SERIALCONSOLE.println("k - Contactor and Gauge Settings");
     //SERIALCONSOLE.println("s - Serial Settings");
