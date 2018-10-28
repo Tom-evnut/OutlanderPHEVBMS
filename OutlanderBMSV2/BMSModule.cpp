@@ -343,7 +343,7 @@ float BMSModule::getAvgTemp()
     {
       if (temperatures[0] > 0.5 && temperatures[1] > 0.5 && temperatures[2] > 0.5)
       {
-        return (temperatures[0] + temperatures[1] + temperatures[2]) / 3.0f;
+        return ((temperatures[0] + temperatures[1] + temperatures[2]) / 3.0f);
       }
       if (temperatures[0] < 0.5 && temperatures[1] > 0.5 && temperatures[2] > 0.5)
       {
