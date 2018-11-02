@@ -70,7 +70,7 @@ int discurrent;
 
 uint16_t SOH = 100; // SOH place holder
 
-unsigned char alarm[4], warning[4]= {0, 0, 0, 0};
+unsigned char alarm[4], warning[4] = {0, 0, 0, 0};
 unsigned char mes[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 unsigned char bmsname[8] = {'S', 'I', 'M', 'P', ' ', 'B', 'M', 'S'};
 unsigned char bmsmanu[8] = {'T', 'O', 'M', ' ', 'D', 'E', ' ', 'B'};
@@ -408,7 +408,7 @@ void loop()
         {
           balancecells = 0;
         }
-        if (digitalRead(IN2) == HIGH && (settings.balanceVoltage + settings.balanceHyst) > bms.getHighCellVolt()) //detect AC present for charging and check not balancing
+        if (digitalRead(IN3) == HIGH && (settings.balanceVoltage + settings.balanceHyst) > bms.getHighCellVolt()) //detect AC present for charging and check not balancing
         {
           bmsstatus = Charge;
         }
@@ -456,7 +456,7 @@ void loop()
           digitalWrite(OUT3, LOW);//turn off charger
           bmsstatus = Ready;
         }
-        if (digitalRead(IN2) == LOW)//detect AC not present for charging
+        if (digitalRead(IN3) == LOW)//detect AC not present for charging
         {
           digitalWrite(OUT3, LOW);//turn off charger
           bmsstatus = Ready;
@@ -466,7 +466,7 @@ void loop()
       case (Error):
         Discharge = 0;
 
-        if (digitalRead(IN2) == HIGH) //detect AC present for charging
+        if (digitalRead(IN3) == HIGH) //detect AC present for charging
         {
           bmsstatus = Charge;
         }
@@ -677,7 +677,7 @@ void printbmsstat()
     }
   }
   SERIALCONSOLE.print("  ");
-  if (digitalRead(IN2) == HIGH)
+  if (digitalRead(IN3) == HIGH)
   {
     SERIALCONSOLE.print("| AC Present |");
   }
@@ -1284,6 +1284,15 @@ void menu()
         incomingByte = 'c';
         break;
 
+      case '3':
+        menuload = 1;
+        if (Serial.available() > 0)
+        {
+          settings.ncur = Serial.parseInt();
+        }
+        incomingByte = 'c';
+        break;
+
       case 113: //q for quite menu
 
         menuload = 0;
@@ -1344,6 +1353,47 @@ void menu()
     }
     }
   */
+
+  if (menuload == 8)
+  {
+    switch (incomingByte)
+    {
+      case '1': //e dispaly settings
+        if (Serial.available() > 0)
+        {
+          settings.IgnoreTemp = Serial.parseInt();
+        }
+        if (settings.IgnoreTemp > 2)
+        {
+          settings.IgnoreTemp = 0;
+        }
+        SERIALCONSOLE.print(settings.IgnoreTemp);
+        SERIALCONSOLE.print(" Temp Sensor Setting");
+        bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+        menuload = 1;
+        incomingByte = 'i';
+        break;
+
+      case '2':
+        if (Serial.available() > 0)
+        {
+          settings.IgnoreVolt = Serial.parseInt();
+          settings.IgnoreVolt = settings.IgnoreVolt * 0.001;
+          SERIALCONSOLE.print(settings.IgnoreVolt);
+          SERIALCONSOLE.print(" mV Voltage Cell Ignore");
+          bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+          menuload = 1;
+          incomingByte = 'i';
+        }
+        break;
+
+      case 113: //q to go back to main menu
+
+        menuload = 0;
+        incomingByte = 115;
+        break;
+    }
+  }
   if (menuload == 7)
   {
     switch (incomingByte)
@@ -1752,6 +1802,21 @@ void menu()
       case 'R'://restart
         CPU_REBOOT ;
         break;
+
+      case 'i': //Ignore Value Settings
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println("Ignore Value Settings");
+        SERIALCONSOLE.print("1 - Temp Sensor Setting:");
+        SERIALCONSOLE.println(settings.IgnoreTemp);
+        SERIALCONSOLE.print("2 - Voltage Under Which To Ignore Cells mV:");
+        SERIALCONSOLE.println(settings.IgnoreVolt * 1000, 0);
+        menuload = 8;
+        break;
+
       case 'a': //Alarm and Warning settings
         SERIALCONSOLE.println();
         SERIALCONSOLE.println();
@@ -1851,6 +1916,8 @@ void menu()
         SERIALCONSOLE.println(settings.invertcur);
         SERIALCONSOLE.print("2 - Pure Voltage based SOC :");
         SERIALCONSOLE.println(settings.voltsoc);
+        SERIALCONSOLE.print("3 - Current Multiplication :");
+        SERIALCONSOLE.println(settings.ncur);
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 2;
         break;
@@ -1887,6 +1954,7 @@ void menu()
     SERIALCONSOLE.println("c - Current Sensor Calibration");
     SERIALCONSOLE.println("k - Contactor and Gauge Settings");
     //SERIALCONSOLE.println("s - Serial Settings");
+    SERIALCONSOLE.println("i - Ignore Value Settings");
     SERIALCONSOLE.println("d - Debug Settings");
     SERIALCONSOLE.println("R - Restart BMS");
     SERIALCONSOLE.println("q - exit menu");
@@ -2044,7 +2112,7 @@ void inputdebug()
   {
     Serial.print("1 OFF ");
   }
-  if (digitalRead(IN2))
+  if (digitalRead(IN3))
   {
     Serial.print("2 ON  ");
   }

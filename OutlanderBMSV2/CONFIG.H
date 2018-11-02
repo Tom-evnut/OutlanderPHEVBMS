@@ -77,4 +77,5 @@ typedef struct {
   int ESSmode;
   int gaugelow;
   int gaugehigh;
+  int ncur;
 } EEPROMSettings;
