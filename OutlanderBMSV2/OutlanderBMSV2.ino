@@ -52,7 +52,7 @@ int Discharge;
 //variables for output control
 int pulltime = 1000;
 int contctrl, contstat = 0; //1 = out 5 high 2 = out 6 high 3 = both high
-unsigned long conttimer, Pretimer = 0;
+unsigned long conttimer, Pretimer, Pretimer1 = 0;
 uint16_t pwmfreq = 10000;//pwm frequency
 
 int pwmcurmax = 50;//Max current to be shown with pwm
@@ -107,6 +107,13 @@ int SOC = 100; //State of Charge
 int SOCset = 0;
 int SOCtest = 0;
 
+
+///charger variables
+int maxac1 = 16; //Shore power 16A per charger
+int maxac2 = 10; //Generator Charging
+int chargerid1 = 0x618; //bulk chargers
+int chargerid2 = 0x638; //finishing charger
+float chargerend = 10.0; //turning off the bulk charger before end voltage
 
 //variables
 int outputstate = 0;
@@ -318,6 +325,9 @@ void loop()
   if (settings.ESSmode == 1)
   {
     bmsstatus = Boot;
+    contctrl = contctrl | 4; //turn on negative contactor
+
+
     if (digitalRead(IN1) == LOW)//Key OFF
     {
       if (storagemode == 1)
@@ -340,19 +350,27 @@ void loop()
     {
       balancecells = 0;
     }
+
+    //Pretimer + settings.Pretime > millis();
+
     if (storagemode == 1)
     {
       if (bms.getHighCellVolt() > settings.StoreVsetpoint)
       {
         digitalWrite(OUT3, LOW);//turn off charger
-        contctrl = contctrl & 1;
+        contctrl = contctrl & 253;
+        Pretimer = millis();
       }
       else
       {
-        if (bms.getLowCellVolt() < (settings.StoreVsetpoint - settings.ChargeHys))
+        if (bms.getHighCellVolt() < (settings.StoreVsetpoint - settings.ChargeHys))
         {
           digitalWrite(OUT3, HIGH);//turn on charger
-          contctrl = contctrl | 2;
+          if (Pretimer + settings.Pretime > millis())
+          {
+            contctrl = contctrl | 2;
+            Pretimer = 0;
+          }
         }
       }
     }
@@ -361,29 +379,39 @@ void loop()
       if (bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighCellVolt() > settings.ChargeVsetpoint)
       {
         digitalWrite(OUT3, LOW);//turn off charger
-        contctrl = contctrl & 1;
+        contctrl = contctrl & 253;
+        Pretimer = millis();
       }
       else
       {
-        if (bms.getLowCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
+        if (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
         {
           digitalWrite(OUT3, HIGH);//turn on charger
-          contctrl = contctrl | 2;
+          if (Pretimer + settings.Pretime > millis())
+          {
+            // Serial.println();
+            //Serial.print(Pretimer);
+            contctrl = contctrl | 2;
+          }
         }
       }
     }
     if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
     {
       digitalWrite(OUT1, LOW);//turn off discharge
-      contctrl = contctrl & 2;
+      contctrl = contctrl & 254;
+      Pretimer1 = millis();
     }
     else
     {
       digitalWrite(OUT1, HIGH);//turn on discharge
-      contctrl = contctrl | 1;
+      if (Pretimer1 + settings.Pretime > millis())
+      {
+        contctrl = contctrl | 1;
+      }
     }
-
-    pwmcomms();
+    chargercomms();
+    //pwmcomms();
   }
   else
   {
@@ -408,7 +436,7 @@ void loop()
         {
           balancecells = 0;
         }
-        if (digitalRead(IN3) == HIGH && (settings.balanceVoltage + settings.balanceHyst) > bms.getHighCellVolt()) //detect AC present for charging and check not balancing
+        if (digitalRead(IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))) //detect AC present for charging and check not balancing
         {
           bmsstatus = Charge;
         }
@@ -451,7 +479,7 @@ void loop()
         {
           balancecells = 0;
         }
-        if (bms.getHighCellVolt() > settings.OverVSetpoint)
+        if (bms.getHighCellVolt() > settings.ChargeVsetpoint)
         {
           digitalWrite(OUT3, LOW);//turn off charger
           bmsstatus = Ready;
@@ -1363,7 +1391,7 @@ void menu()
         {
           settings.IgnoreTemp = Serial.parseInt();
         }
-        if (settings.IgnoreTemp > 2)
+        if (settings.IgnoreTemp > 3)
         {
           settings.IgnoreTemp = 0;
         }
@@ -2204,5 +2232,51 @@ void pwmcomms()
       Serial.print(p);
       Serial.print(" OUT7 ");
   */
+}
+
+
+void chargercomms()
+{
+  msg.id  = chargerid1;
+  msg.len = 7;
+  msg.buf[0] = 0x20;
+  if (digitalRead(IN2) == LOW)//Gen OFF
+  {
+    msg.buf[1] = lowByte(maxac1 * 10);
+    msg.buf[2] = highByte(maxac1 * 10);
+  }
+  else
+  {
+    msg.buf[1] = lowByte(maxac2 * 10);
+    msg.buf[1] = highByte(maxac2 * 10);
+  }
+  msg.buf[3] = lowByte(chargecurrent / 3);
+  msg.buf[4] = highByte(chargecurrent / 3);
+  msg.buf[5] = lowByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells ) - chargerend) * 10));
+  msg.buf[6] = highByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells ) - chargerend)  * 10));
+  Can0.write(msg);
+
+  delay(2);
+
+  msg.id  = chargerid2;
+  msg.len = 7;
+  msg.buf[0] = 0x20;
+  if (digitalRead(IN2) == LOW)//Gen OFF
+  {
+    msg.buf[1] = lowByte(maxac1 * 10);
+    msg.buf[2] = highByte(maxac1 * 10);
+  }
+  else
+  {
+    msg.buf[1] = lowByte(maxac2 * 10);
+    msg.buf[1] = highByte(maxac2 * 10);
+  }
+  msg.buf[3] = lowByte(chargecurrent / 3);
+  msg.buf[4] = highByte(chargecurrent / 3);
+  msg.buf[5] = lowByte(uint16_t((settings.ChargeVsetpoint * settings.Scells ) * 10));
+  msg.buf[6] = highByte(uint16_t((settings.ChargeVsetpoint * settings.Scells ) * 10));
+  Can0.write(msg);
+
+
 }
 
