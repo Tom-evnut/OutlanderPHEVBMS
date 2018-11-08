@@ -93,7 +93,7 @@ int highconv = 285;
 float currentact, RawCur;
 float ampsecond;
 unsigned long lasttime;
-unsigned long looptime,looptime1, cleartime = 0; //ms
+unsigned long looptime, looptime1, cleartime = 0; //ms
 int currentsense = 14;
 int sensor = 1;
 
@@ -568,7 +568,7 @@ void loop()
   {
     //bms.clearmodules(); // Not functional
   }
-    if (millis() - looptime1 > chargerspd)
+  if (millis() - looptime1 > chargerspd)
   {
     looptime1 = millis();
     chargercomms();
@@ -727,7 +727,7 @@ void printbmsstat()
 
 void getcurrent()
 {
-  if (settings.cursens == Analogue)
+  if ( settings.cursens == Analogue)
   {
     if (currentact < 19000 && currentact > -19000)
     {
@@ -739,21 +739,23 @@ void getcurrent()
       sensor = 2;
       adc->startContinuous(ACUR2, ADC_0);
     }
-
     if (sensor == 1)
     {
       if (debugCur != 0)
       {
+        SERIALCONSOLE.println();
         SERIALCONSOLE.print("Low Range: ");
         SERIALCONSOLE.print("Value ADC0: ");
       }
       value = (uint16_t)adc->analogReadContinuous(ADC_0); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
       if (debugCur != 0)
       {
-        SERIALCONSOLE.print(value * 3.3 / adc->getMaxValue(ADC_0), 5);
-        SERIALCONSOLE.print("  ");
+        SERIALCONSOLE.print(value * 3300 / adc->getMaxValue(ADC_0)); //- settings.offset1)
+        SERIALCONSOLE.print(" ");
+        SERIALCONSOLE.print(settings.offset1);
       }
-      RawCur = (float(value * 3300 / adc->getMaxValue(ADC_0)) - offset1) * 15.7;
+      RawCur = int16_t((value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset1) / (settings.convlow * 0.0001);
+
       if (value < 100 || value > (adc->getMaxValue(ADC_0) - 100))
       {
         RawCur = 0;
@@ -761,8 +763,10 @@ void getcurrent()
       if (debugCur != 0)
       {
         SERIALCONSOLE.print("  ");
+        SERIALCONSOLE.print(int16_t(value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset1);
+        SERIALCONSOLE.print("  ");
         SERIALCONSOLE.print(RawCur);
-        SERIALCONSOLE.print("mA");
+        SERIALCONSOLE.print(" mA");
         SERIALCONSOLE.print("  ");
       }
     }
@@ -770,22 +774,26 @@ void getcurrent()
     {
       if (debugCur != 0)
       {
+        SERIALCONSOLE.println();
         SERIALCONSOLE.print("High Range: ");
         SERIALCONSOLE.print("Value ADC0: ");
       }
       value = (uint16_t)adc->analogReadContinuous(ADC_0); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
       if (debugCur != 0)
       {
-        SERIALCONSOLE.print(value * 3.3 / adc->getMaxValue(ADC_0), 5);
+        SERIALCONSOLE.print(value * 3300 / adc->getMaxValue(ADC_0) );//- settings.offset2)
         SERIALCONSOLE.print("  ");
+        SERIALCONSOLE.print(settings.offset2);
       }
-      RawCur = (float(value * 3300 / adc->getMaxValue(ADC_0)) - offset2) * highconv;
+      RawCur = int16_t((value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset2) / (settings.convhigh * 0.0001);
       if (value < 100 || value > (adc->getMaxValue(ADC_0) - 100))
       {
         RawCur = 0;
       }
       if (debugCur != 0)
       {
+        SERIALCONSOLE.print("  ");
+        SERIALCONSOLE.print((float(value * 3300 / adc->getMaxValue(ADC_0)) - settings.offset2));
         SERIALCONSOLE.print("  ");
         SERIALCONSOLE.print(RawCur);
         SERIALCONSOLE.print("mA");
@@ -797,7 +805,7 @@ void getcurrent()
   {
     RawCur = RawCur * -1;
   }
-  RunningAverageBuffer[NextRunningAverage++] = RawCur;
+  RunningAverageBuffer[NextRunningAverage++] = RawCur * settings.ncur;
   if (NextRunningAverage >= RunningAverageCount)
   {
     NextRunningAverage = 0;
@@ -811,7 +819,7 @@ void getcurrent()
 
   currentact = RunningAverageCur;
 
-  if (settings.cursens == Analogue)
+  if ( settings.cursens == Analogue)
   {
     if (sensor == 1)
     {
@@ -1322,6 +1330,24 @@ void menu()
         if (Serial.available() > 0)
         {
           settings.ncur = Serial.parseInt();
+        }
+        incomingByte = 'c';
+        break;
+
+      case '4':
+        menuload = 1;
+        if (Serial.available() > 0)
+        {
+          settings.convlow = Serial.parseInt();
+        }
+        incomingByte = 'c';
+        break;
+
+      case '5':
+        menuload = 1;
+        if (Serial.available() > 0)
+        {
+          settings.convhigh = Serial.parseInt();
         }
         incomingByte = 'c';
         break;
@@ -1951,6 +1977,13 @@ void menu()
         SERIALCONSOLE.println(settings.voltsoc);
         SERIALCONSOLE.print("3 - Current Multiplication :");
         SERIALCONSOLE.println(settings.ncur);
+        SERIALCONSOLE.print("4 - Analogue Low Range Conv:");
+        SERIALCONSOLE.print(settings.convlow * 0.1, 1);
+        SERIALCONSOLE.println(" mV/A");
+        SERIALCONSOLE.print("5 - Analogue High Range Conv:");
+        SERIALCONSOLE.print(settings.convhigh * 0.1, 1);
+        SERIALCONSOLE.println(" mV/A");
+
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 2;
         break;
