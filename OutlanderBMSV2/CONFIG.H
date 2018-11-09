@@ -66,6 +66,7 @@ typedef struct {
   int Pstrings;
   int CAP;
   int chargecurrentmax;
+  int chargecurrentend;
   int discurrentmax ;
   int socvolt[4];
   int invertcur;
@@ -73,7 +74,7 @@ typedef struct {
   int voltsoc;
   uint16_t offset1;
   uint16_t offset2;
-    float convhigh;
+  float convhigh;
   float convlow;
   int Pretime;
   int conthold;
@@ -82,4 +83,6 @@ typedef struct {
   int gaugelow;
   int gaugehigh;
   int ncur;
+  int chargertype;
+  int chargerspd;
 } EEPROMSettings;
