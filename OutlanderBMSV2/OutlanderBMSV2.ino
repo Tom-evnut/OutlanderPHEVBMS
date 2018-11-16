@@ -401,7 +401,7 @@ void loop()
         if (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
         {
           digitalWrite(OUT3, HIGH);//turn on charger
-          if (Pretimer + settings.Pretime > millis())
+          if (Pretimer + settings.Pretime < millis())
           {
             // Serial.println();
             //Serial.print(Pretimer);
@@ -419,7 +419,7 @@ void loop()
     else
     {
       digitalWrite(OUT1, HIGH);//turn on discharge
-      if (Pretimer1 + settings.Pretime > millis())
+      if (Pretimer1 + settings.Pretime < millis())
       {
         contctrl = contctrl | 1;
       }
