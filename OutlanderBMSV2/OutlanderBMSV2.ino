@@ -563,11 +563,7 @@ void loop()
     updateSOC();
     currentlimit();
     VEcan();
-
-    if (settings.ESSmode != 1)
-    {
-      gaugeupdate();
-    }
+    gaugeupdate();
 
     if (cellspresent == 0)
     {
@@ -938,7 +934,7 @@ void updateSOC()
 
   if (debug != 0)
   {
-       if (settings.cursens == Analoguedual)
+    if (settings.cursens == Analoguedual)
     {
       if (sensor == 1)
       {
@@ -949,7 +945,7 @@ void updateSOC()
         SERIALCONSOLE.print("High Range");
       }
     }
-        if (settings.cursens == Analoguesing)
+    if (settings.cursens == Analoguesing)
     {
       SERIALCONSOLE.print("Analogue Single ");
     }
