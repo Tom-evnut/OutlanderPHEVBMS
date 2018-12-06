@@ -902,12 +902,19 @@ void updateSOC()
 {
   if (SOCset == 0)
   {
-    SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
-    SERIALCONSOLE.print("  ");
-    SERIALCONSOLE.print(SOC);
-    SERIALCONSOLE.print("  ");
-    ampsecond = (SOC * settings.CAP * settings.Pstrings * 10) / 0.27777777777778 ;
-    SOCset = 1;
+    if (millis() > 9000)
+    {
+      bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+    }
+    if (millis() > 10000)
+    {
+      SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
+
+      ampsecond = (SOC * settings.CAP * settings.Pstrings * 10) / 0.27777777777778 ;
+      SOCset = 1;
+      SERIALCONSOLE.println("  ");
+      SERIALCONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
+    }
   }
   if (settings.cursens == 1)
   {
