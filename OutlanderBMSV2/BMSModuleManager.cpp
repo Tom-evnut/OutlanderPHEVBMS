@@ -413,10 +413,14 @@ void BMSModuleManager::setPstrings(int Pstrings)
 
 void BMSModuleManager::setSensors(int sensor, float Ignore)
 {
+  
+    
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting())
     {
+      Serial.println(x);
+      Serial.print('x');
       modules[x].settempsensor(sensor);
       modules[x].setIgnoreCell(Ignore);
     }

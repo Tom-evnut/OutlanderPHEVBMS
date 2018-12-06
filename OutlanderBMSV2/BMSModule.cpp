@@ -73,8 +73,14 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
 
   for (int i = 0; i < 8; i++)
   {
-    if (lowestCellVolt[i] > cellVolt[i] && cellVolt[i] >= IgnoreCell) lowestCellVolt[i] = cellVolt[i];
-    if (highestCellVolt[i] < cellVolt[i]) highestCellVolt[i] = cellVolt[i];
+    if (lowestCellVolt[i] > cellVolt[i] && cellVolt[i] >= IgnoreCell)
+    {
+      lowestCellVolt[i] = cellVolt[i];
+    }
+    if (highestCellVolt[i] < cellVolt[i])
+    {
+      highestCellVolt[i] = cellVolt[i];
+    }
   }
 }
 
@@ -339,7 +345,7 @@ float BMSModule::getAvgTemp()
 {
   if (sensor == 0)
   {
-    if (((temperatures[0] + temperatures[1] + temperatures[2]) / 3.0f )> 0.5)
+    if (((temperatures[0] + temperatures[1] + temperatures[2]) / 3.0f ) > 0.5)
     {
       if (temperatures[0] > 0.5 && temperatures[1] > 0.5 && temperatures[2] > 0.5)
       {
@@ -429,10 +435,7 @@ void BMSModule::setExists(bool ex)
 void BMSModule::setIgnoreCell(float Ignore)
 {
   IgnoreCell = Ignore;
+  Serial.print(Ignore);
   Serial.println();
-  Serial.println();
-  Serial.println(Ignore);
-  Serial.println();
-
 }
 

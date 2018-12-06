@@ -58,11 +58,12 @@ byte bmsstatus = 0;
 #define Analoguesing 3
 //
 //Charger Types
-#define NoCharger 0
+#define Relay Charger 0
 #define BrusaNLG5 1
 #define ChevyVolt 2
 #define Eltek 3
 #define Elcon 4
+#define Victron 5
 //
 
 
@@ -1457,6 +1458,7 @@ void menu()
           settings.IgnoreVolt = Serial.parseInt();
           settings.IgnoreVolt = settings.IgnoreVolt * 0.001;
           bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+ // Serial.println(settings.IgnoreVolt);        
           menuload = 1;
           incomingByte = 'i';
         }
@@ -1567,7 +1569,7 @@ void menu()
 
       case '5': //1 Over Voltage Setpoint
         settings.chargertype = settings.chargertype + 1;
-        if (settings.chargertype > 4)
+        if (settings.chargertype > 5)
         {
           settings.chargertype = 0;
         }
@@ -1867,17 +1869,20 @@ void menu()
         SERIALCONSOLE.print("2 - Charge Hystersis: ");
         SERIALCONSOLE.print(settings.ChargeHys * 1000, 0 );
         SERIALCONSOLE.println("mV");
-        SERIALCONSOLE.print("3 - Pack Max Charge Current: ");
-        SERIALCONSOLE.print(settings.chargecurrentmax * 0.1);
-        SERIALCONSOLE.println("A");
-        SERIALCONSOLE.print("4- Pack End of Charge Current: ");
-        SERIALCONSOLE.print(settings.chargecurrentend * 0.1);
-        SERIALCONSOLE.println("A");
+        if (settings.chargertype > 0)
+        {
+          SERIALCONSOLE.print("3 - Pack Max Charge Current: ");
+          SERIALCONSOLE.print(settings.chargecurrentmax * 0.1);
+          SERIALCONSOLE.println("A");
+          SERIALCONSOLE.print("4- Pack End of Charge Current: ");
+          SERIALCONSOLE.print(settings.chargecurrentend * 0.1);
+          SERIALCONSOLE.println("A");
+        }
         SERIALCONSOLE.print("5- Charger Type: ");
         switch (settings.chargertype)
         {
           case 0:
-            SERIALCONSOLE.print("None");
+            SERIALCONSOLE.print("Relay Control");
             break;
           case 1:
             SERIALCONSOLE.print("Brusa NLG5xx");
@@ -1891,15 +1896,21 @@ void menu()
           case 4:
             SERIALCONSOLE.print("Elcon Charger");
             break;
+          case 5:
+            SERIALCONSOLE.print("Victron Charger");
+            break;
         }
         SERIALCONSOLE.println();
-        SERIALCONSOLE.print("6- Charger Can Msg Spd: ");
-        SERIALCONSOLE.print(settings.chargerspd);
-        SERIALCONSOLE.println("mS");
+        if (settings.chargertype > 0)
+        {
+          SERIALCONSOLE.print("6- Charger Can Msg Spd: ");
+          SERIALCONSOLE.print(settings.chargerspd);
+          SERIALCONSOLE.println("mS");
+        }
         /*
-        SERIALCONSOLE.print("7- Can Speed:");
-        SERIALCONSOLE.print(settings.canSpeed/1000);
-        SERIALCONSOLE.println("kbps");
+          SERIALCONSOLE.print("7- Can Speed:");
+          SERIALCONSOLE.print(settings.canSpeed/1000);
+          SERIALCONSOLE.println("kbps");
         */
         SERIALCONSOLE.println();
         SERIALCONSOLE.println("q - Go back to menu");
