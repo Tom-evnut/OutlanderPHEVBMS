@@ -150,6 +150,7 @@ int outputcheck = 0; //check outputs
 int candebug = 0; //view can frames
 int gaugedebug = 0;
 int debugCur = 0;
+int CSVdebug =0;
 int menuload = 0;
 
 
@@ -552,6 +553,10 @@ void loop()
     {
       printbmsstat();
       bms.printPackDetails();
+    }
+    if (CSVdebug != 0)
+    {
+      bms.printAllCSV();
     }
     if (inputcheck != 0)
     {
@@ -1283,7 +1288,6 @@ void BMVmessage()//communication with the Victron Color Control System over VEdi
   VE.write(231);
 }
 
-
 // Settings menu
 void menu()
 {
@@ -1334,6 +1338,12 @@ void menu()
       case '7':
         menuload = 1;
         gaugedebug = !gaugedebug;
+        incomingByte = 'd';
+        break;
+
+      case '8':
+        menuload = 1;
+        CSVdebug = !CSVdebug;
         incomingByte = 'd';
         break;
 
@@ -1465,7 +1475,7 @@ void menu()
           settings.IgnoreVolt = Serial.parseInt();
           settings.IgnoreVolt = settings.IgnoreVolt * 0.001;
           bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
- // Serial.println(settings.IgnoreVolt);        
+          // Serial.println(settings.IgnoreVolt);
           menuload = 1;
           incomingByte = 'i';
         }
@@ -1992,6 +2002,8 @@ void menu()
         SERIALCONSOLE.println(cellspresent);
         SERIALCONSOLE.print("7 - Gauge Debug :");
         SERIALCONSOLE.println(gaugedebug);
+        SERIALCONSOLE.print("8 - CSV Output :");
+        SERIALCONSOLE.println(CSVdebug);
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 4;
         break;
