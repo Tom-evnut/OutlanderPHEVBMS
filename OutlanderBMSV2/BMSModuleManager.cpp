@@ -577,7 +577,7 @@ void BMSModuleManager::printPackSummary()
   }
 }
 
-void BMSModuleManager::printPackDetails()
+void BMSModuleManager::printPackDetails(int digits)
 {
   uint8_t faults;
   uint8_t alerts;
@@ -588,8 +588,8 @@ void BMSModuleManager::printPackDetails()
   Logger::console("");
   Logger::console("");
   Logger::console("");
-  Logger::console("Modules: %i Cells: %i  Voltage: %fV   Avg Cell Voltage: %fV  Low Cell Voltage: %fV   High Cell Voltage: %fV   Avg Temp: %fC ", numFoundModules, seriescells(),
-                  getPackVoltage(), getAvgCellVolt(), LowCellVolt, HighCellVolt, getAvgTemperature());
+  Logger::console("Modules: %i Cells: %i Strings: %i  Voltage: %fV   Avg Cell Voltage: %fV  Low Cell Voltage: %fV   High Cell Voltage: %fV Delta Voltage: %zmV   Avg Temp: %fC ", numFoundModules, seriescells(),
+                  Pstring, getPackVoltage(), getAvgCellVolt(), LowCellVolt, HighCellVolt, (HighCellVolt-LowCellVolt)*1000, getAvgTemperature());
   Logger::console("");
   for (int y = 1; y < 63; y++)
   {
@@ -604,7 +604,7 @@ void BMSModuleManager::printPackDetails()
       SERIALCONSOLE.print(y);
       if (y < 10) SERIALCONSOLE.print(" ");
       SERIALCONSOLE.print("  ");
-      SERIALCONSOLE.print(modules[y].getModuleVoltage());
+      SERIALCONSOLE.print(modules[y].getModuleVoltage(),digits);
       SERIALCONSOLE.print("V");
       for (int i = 0; i < 8; i++)
       {
@@ -612,7 +612,7 @@ void BMSModuleManager::printPackDetails()
         SERIALCONSOLE.print("  Cell");
         SERIALCONSOLE.print(cellNum++);
         SERIALCONSOLE.print(": ");
-        SERIALCONSOLE.print(modules[y].getCellVoltage(i));
+        SERIALCONSOLE.print(modules[y].getCellVoltage(i),digits);
         SERIALCONSOLE.print("V");
       }
       SERIALCONSOLE.println();
