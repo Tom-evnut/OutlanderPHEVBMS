@@ -17,7 +17,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 190127;
+int firmver = 190128;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -184,6 +184,7 @@ void loadSettings()
   settings.Scells = 12;//Cells in series
   settings.StoreVsetpoint = 3.8; // V storage mode charge max
   settings.discurrentmax = 300; // max discharge current in 0.1A
+  settings.DisTaper = 0.3f; //V offset to bring in discharge taper to Zero Amps at settings.DischVsetpoint
   settings.chargecurrentmax = 300; //max charge current in 0.1A
   settings.chargecurrentend = 50; //end charge current in 0.1A
   settings.socvolt[0] = 3100; //Voltage and SOC curve for voltage based SOC calc
@@ -1895,6 +1896,15 @@ void menu()
           incomingByte = 'b';
         }
 
+      case 'h':
+        if (Serial.available() > 0)
+        {
+          settings.DisTaper = Serial.parseInt();
+          settings.DisTaper = settings.DisTaper / 1000;
+          menuload = 1;
+          incomingByte = 'b';
+        }
+
       case 'b':
         if (Serial.available() > 0)
         {
@@ -2342,6 +2352,10 @@ void menu()
         SERIALCONSOLE.print(settings.StoreVsetpoint * 1000, 0 );
         SERIALCONSOLE.print("mV");
         SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.print("h - Discharge Current Taper Offset: ");
+        SERIALCONSOLE.print(settings.DisTaper * 1000, 0 );
+        SERIALCONSOLE.print("mV");
+        SERIALCONSOLE.println("  ");
 
         SERIALCONSOLE.println();
         menuload = 3;
@@ -2461,6 +2475,7 @@ void currentlimit()
   }
   else
   {
+    ///////////temperature based current limit////////////
     if (bms.getAvgTemperature() < settings.UnderTSetpoint)
     {
       discurrent = 0;
@@ -2523,7 +2538,17 @@ void currentlimit()
   if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
   {
     discurrent = 0;
-
+  }
+  else
+  {
+    if (bms.getLowCellVolt() > (settings.DischVsetpoint + settings.DisTaper))
+    {
+      discurrent = settings.discurrentmax;
+    }
+    else
+    {
+      discurrent = map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), 0, settings.chargecurrentmax);
+    }
   }
   ///No negative currents///
   if (discurrent < 0)
