@@ -17,7 +17,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 190203;
+int firmver = 190215;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -209,6 +209,7 @@ void loadSettings()
   settings.chargerspd = 100; //ms per message
   settings.UnderDur = 5000; //ms of allowed undervoltage before throwing open stopping discharge.
   settings.CurDead = 5;// mV of dead band on current sensor
+  settings.ChargerDirect = 1; //1 - charger is always connected to HV battery // 0 - Charger is behind the contactors
 }
 
 
@@ -472,6 +473,11 @@ void loop()
 
         case (Ready):
           Discharge = 0;
+          digitalWrite(OUT4, LOW);
+          digitalWrite(OUT3, LOW);//turn off charger
+          digitalWrite(OUT2, LOW);
+          digitalWrite(OUT1, LOW);//turn off discharge
+          contctrl = 0; //turn off out 5 and 6
           if (bms.getHighCellVolt() > settings.balanceVoltage && bms.getHighCellVolt() > bms.getLowCellVolt() + settings.balanceHyst)
           {
             //bms.balanceCells();
@@ -483,7 +489,15 @@ void loop()
           }
           if (digitalRead(IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))) //detect AC present for charging and check not balancing
           {
-            bmsstatus = Charge;
+            if (settings.ChargerDirect == 1)
+            {
+              bmsstatus = Charge;
+            }
+            else
+            {
+              bmsstatus = Precharge;
+              Pretimer = millis();
+            }
           }
           if (digitalRead(IN1) == HIGH) //detect Key ON
           {
@@ -503,11 +517,11 @@ void loop()
           Discharge = 1;
           if (digitalRead(IN1) == LOW)//Key OFF
           {
-            digitalWrite(OUT4, LOW);
-            digitalWrite(OUT2, LOW);
-            digitalWrite(OUT1, LOW);
-            contctrl = 0; //turn off out 5 and 6
             bmsstatus = Ready;
+          }
+          if (digitalRead(IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))) //detect AC present for charging and check not balancing
+          {
+            bmsstatus = Charge;
           }
 
           break;
@@ -531,18 +545,18 @@ void loop()
           }
           if (digitalRead(IN3) == LOW)//detect AC not present for charging
           {
-            digitalWrite(OUT3, LOW);//turn off charger
             bmsstatus = Ready;
           }
           break;
 
         case (Error):
           Discharge = 0;
-
-          if (digitalRead(IN3) == HIGH) //detect AC present for charging
-          {
-            bmsstatus = Charge;
-          }
+          /*
+                    if (digitalRead(IN3) == HIGH) //detect AC present for charging
+                    {
+                      bmsstatus = Charge;
+                    }
+          */
           if (digitalRead(IN1) == LOW)//Key OFF
           {
             //if (cellspresent == bms.seriescells()) //detect a fault in cells detected
@@ -1082,7 +1096,7 @@ void updateSOC()
 
 void Prechargecon()
 {
-  if (digitalRead(IN1) == HIGH) //detect Key ON
+  if (digitalRead(IN1) == HIGH || digitalRead(IN3) == HIGH) //detect Key ON or AC present
   {
     digitalWrite(OUT4, HIGH);//Negative Contactor Close
     contctrl = 2;
@@ -1094,7 +1108,21 @@ void Prechargecon()
     {
       digitalWrite(OUT1, HIGH);//Positive Contactor Close
       contctrl = 3;
-      bmsstatus = Drive;
+      if (settings.ChargerDirect == 1)
+      {
+        bmsstatus = Drive;
+      }
+      else
+      {
+        if (digitalRead(IN3) == HIGH)
+        {
+          bmsstatus = Charge;
+        }
+        if (digitalRead(IN1) == HIGH)
+        {
+          bmsstatus = Drive;
+        }
+      }
       digitalWrite(OUT2, LOW);
     }
   }
@@ -2113,7 +2141,7 @@ void menu()
             SERIALCONSOLE.print("Elcon Charger");
             break;
           case 5:
-            SERIALCONSOLE.print("Victron Charger");
+            SERIALCONSOLE.print("Victron/SMA");
             break;
         }
         SERIALCONSOLE.println();
@@ -2128,6 +2156,17 @@ void menu()
           SERIALCONSOLE.print(settings.canSpeed/1000);
           SERIALCONSOLE.println("kbps");
         */
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.print("7 - Charger HV Connection: ");
+        switch (settings.ChargerDirect)
+        {
+          case 0:
+            SERIALCONSOLE.print(" Behind Contactors");
+            break;
+          case 1:
+            SERIALCONSOLE.print("Direct To Battery HV");
+            break;
+        }
         SERIALCONSOLE.println();
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 6;
