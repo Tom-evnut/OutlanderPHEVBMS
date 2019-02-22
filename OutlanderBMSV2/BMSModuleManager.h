@@ -39,7 +39,7 @@ class BMSModuleManager
     /*
       void processCANMsg(CAN_FRAME &frame);
     */
-    void printAllCSV();
+    void printAllCSV(unsigned long timestamp,float current);
     void printPackSummary();
     void printPackDetails(int digits);
 

@@ -613,7 +613,7 @@ void loop()
     }
     if (CSVdebug != 0)
     {
-      bms.printAllCSV();
+      bms.printAllCSV(millis(), currentact);
     }
     if (inputcheck != 0)
     {
@@ -645,7 +645,10 @@ void loop()
       }
     }
     alarmupdate();
-    dashupdate();
+    if (CSVdebug != 1)
+    {
+      dashupdate();
+    }
 
     resetwdog();
   }
