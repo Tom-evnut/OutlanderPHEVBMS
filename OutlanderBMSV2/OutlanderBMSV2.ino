@@ -17,7 +17,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 190215;
+int firmver = 190228;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -153,7 +153,7 @@ int debugCur = 0;
 int CSVdebug = 0;
 int menuload = 0;
 int debugdigits = 2; //amount of digits behind decimal for voltage reading
-
+int Charged = 0;
 
 ADC *adc = new ADC(); // adc object
 void loadSettings()
@@ -395,11 +395,14 @@ void loop()
           digitalWrite(OUT3, LOW);//turn off charger
           contctrl = contctrl & 253;
           Pretimer = millis();
+          Charged = 1;
+          SOCcharged(2);
         }
         else
         {
-          if (bms.getHighCellVolt() < (settings.StoreVsetpoint - settings.ChargeHys))
+          if (Charged == 1 && bms.getHighCellVolt() < (settings.StoreVsetpoint - settings.ChargeHys))
           {
+            Charged = 0;
             digitalWrite(OUT3, HIGH);//turn on charger
             if (Pretimer + settings.Pretime < millis())
             {
@@ -416,11 +419,14 @@ void loop()
           digitalWrite(OUT3, LOW);//turn off charger
           contctrl = contctrl & 253;
           Pretimer = millis();
+          Charged = 1;
+          SOCcharged(2);
         }
         else
         {
-          if (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
+          if (Charged == 1 && bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
           {
+            Charged = 0;
             digitalWrite(OUT3, HIGH);//turn on charger
             if (Pretimer + settings.Pretime < millis())
             {
@@ -540,6 +546,14 @@ void loop()
           }
           if (bms.getHighCellVolt() > settings.ChargeVsetpoint)
           {
+            if (bms.getAvgCellVolt() > (settings.ChargeVsetpoint - settings.ChargeHys))
+            {
+              SOCcharged(2);
+            }
+            else
+            {
+              SOCcharged(1);
+            }
             digitalWrite(OUT3, LOW);//turn off charger
             bmsstatus = Ready;
           }
@@ -1094,6 +1108,19 @@ void updateSOC()
     SERIALCONSOLE.print(ampsecond * 0.27777777777778, 2);
     SERIALCONSOLE.println ("mAh");
 
+  }
+}
+
+void SOCcharged(int y)
+{
+  if (y == 1)
+  {
+    SOC = 95;
+    ampsecond = (settings.CAP * settings.Pstrings * 1000) / 0.27777777777778 ; //reset to full, dependant on given capacity. Need to improve with auto correction for capcity.
+  }
+  if (y == 2)
+  {
+    SOC = 100;
   }
 }
 
