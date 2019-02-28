@@ -58,8 +58,11 @@ class BMSModuleManager
     BMSModule modules[MAX_MODULE_ADDR + 1]; // store data for as many modules as we've configured for.
     int batteryID;
     int numFoundModules;                    // The number of modules that seem to exist
+    int numFoundModulesOLD;
     bool isFaulted;
     int spack;
+    float ignorevolt;
+    int tempsens;
     /*
       void sendBatterySummary();
       void sendModuleSummary(int module);

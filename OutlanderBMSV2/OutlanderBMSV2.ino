@@ -324,14 +324,10 @@ void setup()
     loadSettings();
   }
 
-  bms.renumberBoardIDs();
-
   Logger::setLoglevel(Logger::Off); //Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
 
   lastUpdate = 0;
-
-  //bms.clearFaults();
-  bms.findBoards();
+  
   digitalWrite(led, HIGH);
   bms.setPstrings(settings.Pstrings);
   bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
