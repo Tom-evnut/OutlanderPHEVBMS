@@ -390,7 +390,7 @@ void BMSModuleManager::printPackDetails(int digits)
   }
 }
 
-void BMSModuleManager::printAllCSV(unsigned long timestamp, float current)
+void BMSModuleManager::printAllCSV(unsigned long timestamp, float current, int SOC)
 {
   for (int y = 1; y < 63; y++)
   {
@@ -399,6 +399,8 @@ void BMSModuleManager::printAllCSV(unsigned long timestamp, float current)
       SERIALCONSOLE.print(timestamp);
       SERIALCONSOLE.print(",");
       SERIALCONSOLE.print(current);
+      SERIALCONSOLE.print(",");
+      SERIALCONSOLE.print(SOC);
       SERIALCONSOLE.print(",");
       SERIALCONSOLE.print(y);
       SERIALCONSOLE.print(",");

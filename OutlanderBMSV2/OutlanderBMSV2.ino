@@ -5,7 +5,7 @@
 #include "Logger.h"
 #include <ADC.h> //https://github.com/pedvide/ADC
 #include <EEPROM.h>
-#include <FlexCAN.h> //https://github.com/teachop/FlexCAN_Library 
+#include <FlexCAN.h> https://github.com/collin80/FlexCAN_Library
 #include <SPI.h>
 #include <Filters.h>//https://github.com/JonHub/Filters
 
@@ -327,7 +327,7 @@ void setup()
   Logger::setLoglevel(Logger::Off); //Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
 
   lastUpdate = 0;
-  
+
   digitalWrite(led, HIGH);
   bms.setPstrings(settings.Pstrings);
   bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
@@ -623,7 +623,7 @@ void loop()
     }
     if (CSVdebug != 0)
     {
-      bms.printAllCSV(millis(), currentact);
+      bms.printAllCSV(millis(), currentact, SOC);
     }
     if (inputcheck != 0)
     {

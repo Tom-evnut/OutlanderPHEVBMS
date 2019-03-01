@@ -22,6 +22,7 @@ BMSModule::BMSModule()
   highestModuleVolt = 0.0f;
   exists = false;
   moduleAddress = 0;
+  timeout = 30000; //milliseconds before comms timeout;
 }
 
 void BMSModule::clearmodule()
@@ -40,6 +41,7 @@ void BMSModule::clearmodule()
 
 void BMSModule::decodecan(int Id, CAN_message_t &msg)
 {
+  cmuerror = 0;
   switch (Id)
   {
     case 0x1:
@@ -56,7 +58,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       }
       else
       {
-        cellVolt[4] = 0;
+
       }
 
       if (float((msg.buf[2] * 256 + msg.buf[3]) * 0.001) > IgnoreCell && float((msg.buf[2] * 256 + msg.buf[3]) * 0.001) < 60.0)
@@ -65,7 +67,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       }
       else
       {
-        cellVolt[5] = 0;
+
       }
 
       if (float((msg.buf[4] * 256 + msg.buf[5]) * 0.001) > IgnoreCell && float((msg.buf[4] * 256 + msg.buf[5]) * 0.001) < 60.0)
@@ -74,7 +76,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       }
       else
       {
-        cellVolt[6] = 0;
+
       }
 
       if (float((msg.buf[6] * 256 + msg.buf[7]) * 0.001) > IgnoreCell && float((msg.buf[6] * 256 + msg.buf[7]) * 0.001) < 60.0)
@@ -83,7 +85,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       }
       else
       {
-        cellVolt[7] = 0;
+
       }
 
       break;
@@ -95,7 +97,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       }
       else
       {
-        cellVolt[0] = 0;
+        cmuerror = 1;
       }
 
       if (float((msg.buf[2] * 256 + msg.buf[3]) * 0.001) > IgnoreCell && float((msg.buf[2] * 256 + msg.buf[3]) * 0.001) < 60.0)
@@ -104,7 +106,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       }
       else
       {
-        cellVolt[1] = 0;
+        cmuerror = 1;
       }
 
       if (float((msg.buf[4] * 256 + msg.buf[5]) * 0.001) > IgnoreCell && float((msg.buf[4] * 256 + msg.buf[5]) * 0.001) < 60.0)
@@ -113,7 +115,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       }
       else
       {
-        cellVolt[2] = 0;
+        cmuerror = 1;
       }
 
       if (float((msg.buf[6] * 256 + msg.buf[7]) * 0.001) > IgnoreCell && float((msg.buf[6] * 256 + msg.buf[7]) * 0.001) < 60.0)
@@ -122,7 +124,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       }
       else
       {
-        cellVolt[3] = 0;
+        cmuerror = 1;
       }
 
       break;
@@ -143,6 +145,25 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
     if (highestCellVolt[i] < cellVolt[i])
     {
       highestCellVolt[i] = cellVolt[i];
+    }
+  }
+
+  if (cmuerror == 0)
+  {
+    lasterror = millis();
+  }
+  else
+  {
+    if ( lasterror - millis() > timeout)
+    {
+      for (int i = 0; i < 8; i++)
+      {
+        cellVolt[i] = 0.0f;
+      }
+      moduleVolt = 0.0f;
+      temperatures[0] = 0.0f;
+      temperatures[1] = 0.0f;
+      temperatures[2] = 0.0f;
     }
   }
 }
