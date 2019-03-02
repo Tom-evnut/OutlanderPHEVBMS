@@ -524,7 +524,7 @@ void BMSModule::setExists(bool ex)
 
 void BMSModule::setReset(bool ex)
 {
-  exists = ex;
+  reset = ex;
 }
 
 void BMSModule::setIgnoreCell(float Ignore)

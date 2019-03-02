@@ -52,7 +52,7 @@ bool BMSModuleManager::checkcomms()
   }
   if ( g == 0)
   {
-    //return false;
+    return false;
   }
   return true;
 }
