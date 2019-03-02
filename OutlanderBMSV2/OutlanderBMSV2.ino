@@ -68,6 +68,7 @@ byte bmsstatus = 0;
 
 
 int Discharge;
+int ErrorReason =0;
 
 //variables for output control
 int pulltime = 1000;
@@ -605,6 +606,7 @@ void loop()
         SERIALCONSOLE.print("   !!! Undervoltage Fault !!!");
         SERIALCONSOLE.println("  ");
         bmsstatus = Error;
+        ErrorReason =1;
       }
     }
     else //In 'vehicle' mode
@@ -614,6 +616,7 @@ void loop()
         if (UnderTime > millis()) //check is last time not undervoltage is longer thatn UnderDur ago
         {
           bmsstatus = Error;
+          ErrorReason = 2;
         }
       }
       else
@@ -661,6 +664,7 @@ void loop()
         SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
         SERIALCONSOLE.println("  ");
         bmsstatus = Error;
+        ErrorReason = 3;
       }
     }
     alarmupdate();
@@ -690,6 +694,7 @@ void loop()
       SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
       SERIALCONSOLE.println("  ");
       bmsstatus = Error;
+      ErrorReason = 4;
     }
     cleartime = millis();
   }
@@ -852,6 +857,8 @@ void printbmsstat()
     }
     SERIALCONSOLE.print(" Magic for Tom: ");
     SERIALCONSOLE.print(bmsstatus);
+    SERIALCONSOLE.print(" Fuck up Number: ");
+    SERIALCONSOLE.print(ErrorReason);
   }
   else
   {
