@@ -155,7 +155,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
   }
   else
   {
-    if ( lasterror - millis() > timeout)
+    if (millis() - lasterror > timeout)
     {
       for (int i = 0; i < 8; i++)
       {
@@ -351,7 +351,10 @@ float BMSModule::getAverageV()
     }
   }
 
-  scells = x;
+  if (x != 0)
+  {
+    scells = x;
+  }
   avgVal /= x;
   return avgVal;
 }
