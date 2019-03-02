@@ -33,10 +33,12 @@ void BMSModuleManager::clearmodules()
 
 bool BMSModuleManager::checkcomms()
 {
+  int g = 0;
   for (int y = 1; y < 63; y++)
   {
     if (modules[y].isExisting())
     {
+      g = 1;
       if (modules[y].isReset())
       {
         //Do nothing as the counter has been reset
@@ -47,6 +49,10 @@ bool BMSModuleManager::checkcomms()
       }
     }
     modules[y].setReset(false);
+  }
+  if ( g == 0)
+  {
+    return false;
   }
   return true;
 }

@@ -143,8 +143,6 @@ int storagemode = 0;
 int x = 0;
 int balancecells;
 int cellspresent = 0;
-int modulescantimeout = 5000;
-uint32_t cantimer = 0;
 
 //Debugging modes//////////////////
 int debug = 1;
@@ -597,7 +595,6 @@ void loop()
 
   if (millis() - looptime > 500)
   {
-
     looptime = millis();
     bms.getAllVoltTemp();
     //UV  check
@@ -662,10 +659,6 @@ void loop()
         bmsstatus = Error;
       }
     }
-    if (cantimer - millis() > modulescantimeout)
-    {
-      bmsstatus = Error;
-    }
     alarmupdate();
     if (CSVdebug != 1)
     {
@@ -692,6 +685,7 @@ void loop()
       SERIALCONSOLE.println("  ");
       bmsstatus = Error;
     }
+    cleartime = millis();
   }
   if (millis() - looptime1 > settings.chargerspd)
   {
@@ -2514,7 +2508,6 @@ void canread()
   if (inMsg.id > 0x600 && inMsg.id < 0x800)//do mitsubishi magic if ids are ones identified to be modules
   {
     bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
-    cantimer = millis();
   }
   if (inMsg.id > 0x80000600 && inMsg.id < 0x80000800)//do mitsubishi magic if ids are ones identified to be modules
   {
