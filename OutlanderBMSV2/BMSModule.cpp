@@ -42,7 +42,6 @@ void BMSModule::clearmodule()
 
 void BMSModule::decodecan(int Id, CAN_message_t &msg)
 {
-  cmuerror = 0;
   switch (Id)
   {
     case 0x1:
@@ -56,6 +55,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       if (float((msg.buf[0] * 256 + msg.buf[1]) * 0.001) > IgnoreCell && float((msg.buf[0] * 256 + msg.buf[1]) * 0.001) < 60.0)
       {
         cellVolt[4] = float((msg.buf[0] * 256 + msg.buf[1]) * 0.001);
+        cmuerror = 0;
       }
       else
       {
@@ -65,6 +65,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       if (float((msg.buf[2] * 256 + msg.buf[3]) * 0.001) > IgnoreCell && float((msg.buf[2] * 256 + msg.buf[3]) * 0.001) < 60.0)
       {
         cellVolt[5] = float((msg.buf[2] * 256 + msg.buf[3]) * 0.001);
+        cmuerror = 0;
       }
       else
       {
@@ -74,6 +75,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       if (float((msg.buf[4] * 256 + msg.buf[5]) * 0.001) > IgnoreCell && float((msg.buf[4] * 256 + msg.buf[5]) * 0.001) < 60.0)
       {
         cellVolt[6] = float((msg.buf[4] * 256 + msg.buf[5]) * 0.001);
+        cmuerror = 0;
       }
       else
       {
@@ -83,6 +85,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       if (float((msg.buf[6] * 256 + msg.buf[7]) * 0.001) > IgnoreCell && float((msg.buf[6] * 256 + msg.buf[7]) * 0.001) < 60.0)
       {
         cellVolt[7] = float((msg.buf[6] * 256 + msg.buf[7]) * 0.001);
+        cmuerror = 0;
       }
       else
       {
@@ -95,6 +98,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       if (float((msg.buf[0] * 256 + msg.buf[1]) * 0.001) > IgnoreCell && float((msg.buf[0] * 256 + msg.buf[1]) * 0.001) < 60.0)
       {
         cellVolt[0] = float((msg.buf[0] * 256 + msg.buf[1]) * 0.001);
+        cmuerror = 0;
       }
       else
       {
@@ -104,6 +108,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       if (float((msg.buf[2] * 256 + msg.buf[3]) * 0.001) > IgnoreCell && float((msg.buf[2] * 256 + msg.buf[3]) * 0.001) < 60.0)
       {
         cellVolt[1] = float((msg.buf[2] * 256 + msg.buf[3]) * 0.001);
+        cmuerror = 0;
       }
       else
       {
@@ -113,6 +118,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       if (float((msg.buf[4] * 256 + msg.buf[5]) * 0.001) > IgnoreCell && float((msg.buf[4] * 256 + msg.buf[5]) * 0.001) < 60.0)
       {
         cellVolt[2] = float((msg.buf[4] * 256 + msg.buf[5]) * 0.001);
+        cmuerror = 0;
       }
       else
       {
@@ -122,6 +128,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       if (float((msg.buf[6] * 256 + msg.buf[7]) * 0.001) > IgnoreCell && float((msg.buf[6] * 256 + msg.buf[7]) * 0.001) < 60.0)
       {
         cellVolt[3] = float((msg.buf[6] * 256 + msg.buf[7]) * 0.001);
+        cmuerror = 0;
       }
       else
       {
