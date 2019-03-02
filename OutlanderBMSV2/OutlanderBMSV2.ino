@@ -689,6 +689,10 @@ void loop()
         SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
         SERIALCONSOLE.println("  ");
       */
+      if (  bmsstatus == Error)
+      {
+        bmsstatus = Boot;
+      }
     }
     else
     {
@@ -858,10 +862,6 @@ void printbmsstat()
         }
       }
     }
-    SERIALCONSOLE.print(" Magic for Tom: ");
-    SERIALCONSOLE.print(bmsstatus);
-    SERIALCONSOLE.print(" Fuck up Number: ");
-    SERIALCONSOLE.print(ErrorReason);
   }
   else
   {
