@@ -336,7 +336,7 @@ void setup()
   ///precharge timer kickers
   Pretimer = millis();
   Pretimer1  = millis();
-
+  bmsstatus = Boot;
 }
 
 void loop()
@@ -599,13 +599,12 @@ void loop()
     //UV  check
     if (settings.ESSmode == 1)
     {
-      bmsstatus = Ready;
       if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
       {
         SERIALCONSOLE.println("  ");
         SERIALCONSOLE.print("   !!! Undervoltage Fault !!!");
         SERIALCONSOLE.println("  ");
-        //bmsstatus = Error;
+        bmsstatus = Error;
       }
     }
     else //In 'vehicle' mode
@@ -661,7 +660,7 @@ void loop()
         SERIALCONSOLE.println("  ");
         SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
         SERIALCONSOLE.println("  ");
-        //bmsstatus = Error;
+        bmsstatus = Error;
       }
     }
     alarmupdate();
@@ -851,6 +850,8 @@ void printbmsstat()
         }
       }
     }
+    SERIALCONSOLE.print(" Magic for Tom: ");
+    SERIALCONSOLE.print(bmsstatus);
   }
   else
   {
