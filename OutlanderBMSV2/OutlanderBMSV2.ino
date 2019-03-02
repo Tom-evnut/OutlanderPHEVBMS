@@ -655,7 +655,10 @@ void loop()
     {
       if (cellspresent != bms.seriescells()) //detect a fault in cells detected
       {
-        bmsstatus = Error;
+        SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
+        SERIALCONSOLE.println("  ");
+        //bmsstatus = Error;
       }
     }
     alarmupdate();
@@ -673,19 +676,17 @@ void loop()
     {
       //no missing modules
       /*
-      SERIALCONSOLE.println("  ");
-      SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
-      SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
+        SERIALCONSOLE.println("  ");
       */
     }
     else
     {
       //missing module
-      /*
       SERIALCONSOLE.println("  ");
       SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
       SERIALCONSOLE.println("  ");
-      */
       bmsstatus = Error;
     }
     cleartime = millis();
@@ -2615,54 +2616,54 @@ void currentlimit()
         }
       }
     }
-  }
-  ///voltage influence on current///
-  if (storagemode == 1)
-  {
-    if (bms.getHighCellVolt() > (settings.StoreVsetpoint - settings.ChargeHys))
+    ///voltage influence on current///
+    if (storagemode == 1)
     {
-      chargecurrent = map(bms.getHighCellVolt(), (settings.StoreVsetpoint - settings.ChargeHys), settings.StoreVsetpoint, settings.chargecurrentmax, settings.chargecurrentend);
-    }
-    if (bms.getHighCellVolt() > settings.OverVSetpoint)
-    {
-      chargecurrent = 0;
-    }
-  }
-  else
-  {
-    if (bms.getHighCellVolt() > (settings.ChargeVsetpoint - settings.ChargeHys))
-    {
-      chargecurrent = map(bms.getHighCellVolt(), (settings.ChargeVsetpoint - settings.ChargeHys), settings.ChargeVsetpoint, settings.chargecurrentmax, settings.chargecurrentend);
-    }
-    if (bms.getHighCellVolt() > settings.OverVSetpoint)
-    {
-      chargecurrent = 0;
-    }
-  }
-
-  if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
-  {
-    discurrent = 0;
-  }
-  else
-  {
-    if (bms.getLowCellVolt() > (settings.DischVsetpoint + settings.DisTaper))
-    {
-      discurrent = settings.discurrentmax;
+      if (bms.getHighCellVolt() > (settings.StoreVsetpoint - settings.ChargeHys))
+      {
+        chargecurrent = map(bms.getHighCellVolt(), (settings.StoreVsetpoint - settings.ChargeHys), settings.StoreVsetpoint, settings.chargecurrentmax, settings.chargecurrentend);
+      }
+      if (bms.getHighCellVolt() > settings.OverVSetpoint)
+      {
+        chargecurrent = 0;
+      }
     }
     else
     {
-      discurrent = map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), 0, settings.chargecurrentmax);
+      if (bms.getHighCellVolt() > (settings.ChargeVsetpoint - settings.ChargeHys))
+      {
+        chargecurrent = map(bms.getHighCellVolt(), (settings.ChargeVsetpoint - settings.ChargeHys), settings.ChargeVsetpoint, settings.chargecurrentmax, settings.chargecurrentend);
+      }
+      if (bms.getHighCellVolt() > settings.OverVSetpoint)
+      {
+        chargecurrent = 0;
+      }
     }
-  }
-  ///No negative currents///
-  if (discurrent < 0)
-  {
-    discurrent = 0;
-  }
-  if (chargecurrent < 0)
-  {
-    chargecurrent = 0;
+
+    if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
+    {
+      discurrent = 0;
+    }
+    else
+    {
+      if (bms.getLowCellVolt() > (settings.DischVsetpoint + settings.DisTaper))
+      {
+        discurrent = settings.discurrentmax;
+      }
+      else
+      {
+        discurrent = map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), 0, settings.chargecurrentmax);
+      }
+    }
+    ///No negative currents///
+    if (discurrent < 0)
+    {
+      discurrent = 0;
+    }
+    if (chargecurrent < 0)
+    {
+      chargecurrent = 0;
+    }
   }
 }
 
