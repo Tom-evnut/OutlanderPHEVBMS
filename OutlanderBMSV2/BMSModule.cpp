@@ -155,6 +155,9 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
   }
   else
   {
+    SERIALCONSOLE.println("  ");
+    SERIALCONSOLE.print("   Counter Till Can Error : ");
+    SERIALCONSOLE.println(lasterror + timeout - millis() );
     if (millis() - lasterror > timeout)
     {
       for (int i = 0; i < 8; i++)
