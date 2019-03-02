@@ -624,6 +624,8 @@ void loop()
     if (CSVdebug != 0)
     {
       bms.printAllCSV(millis(), currentact, SOC);
+      SERIALCONSOLE.println(" ");
+      SERIALCONSOLE.println(SOC);
     }
     if (inputcheck != 0)
     {

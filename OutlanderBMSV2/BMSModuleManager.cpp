@@ -425,6 +425,8 @@ void BMSModuleManager::printAllCSV(unsigned long timestamp, float current, int S
       Serial2.print(",");
       Serial2.print(current);
       Serial2.print(",");
+      Serial2.print(SOC);
+      Serial2.print(",");
       Serial2.print(y);
       Serial2.print(",");
       for (int i = 0; i < 8; i++)
