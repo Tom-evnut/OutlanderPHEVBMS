@@ -599,10 +599,13 @@ void loop()
     //UV  check
     if (settings.ESSmode == 1)
     {
+      bmsstatus = Ready;
       if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
       {
-
-        bmsstatus = Error;
+        SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.print("   !!! Undervoltage Fault !!!");
+        SERIALCONSOLE.println("  ");
+        //bmsstatus = Error;
       }
     }
     else //In 'vehicle' mode
