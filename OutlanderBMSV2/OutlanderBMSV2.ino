@@ -68,7 +68,7 @@ byte bmsstatus = 0;
 
 
 int Discharge;
-int ErrorReason =0;
+int ErrorReason = 0;
 
 //variables for output control
 int pulltime = 1000;
@@ -600,17 +600,16 @@ void loop()
     //UV  check
     if (settings.ESSmode == 1)
     {
-      if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
+      if (SOCset != 0)
       {
-        SERIALCONSOLE.println("  ");
-        SERIALCONSOLE.print("   !!! Undervoltage Fault !!!");
-        SERIALCONSOLE.println("  ");
-        bmsstatus = Error;
-        ErrorReason =1;
-      }
-      else
-      {
-        bmsstatus = Boot;
+        if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
+        {
+          SERIALCONSOLE.println("  ");
+          SERIALCONSOLE.print("   !!! Undervoltage Fault !!!");
+          SERIALCONSOLE.println("  ");
+          bmsstatus = Error;
+          ErrorReason = 1;
+        }
       }
     }
     else //In 'vehicle' mode
