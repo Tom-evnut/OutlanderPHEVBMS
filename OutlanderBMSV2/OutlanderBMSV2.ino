@@ -356,7 +356,6 @@ void loop()
     contcon();
     if (settings.ESSmode == 1)
     {
-      bmsstatus = Boot;
       contctrl = contctrl | 4; //turn on negative contactor
 
 
@@ -673,16 +672,20 @@ void loop()
     if (bms.checkcomms())
     {
       //no missing modules
+      /*
       SERIALCONSOLE.println("  ");
       SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
       SERIALCONSOLE.println("  ");
+      */
     }
     else
     {
       //missing module
+      /*
       SERIALCONSOLE.println("  ");
       SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
       SERIALCONSOLE.println("  ");
+      */
       bmsstatus = Error;
     }
     cleartime = millis();
