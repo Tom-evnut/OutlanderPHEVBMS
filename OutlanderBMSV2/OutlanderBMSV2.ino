@@ -662,7 +662,7 @@ void loop()
         bmsstatus = Error;
       }
     }
-    if(cantimer - millis() > modulescantimeout)
+    if (cantimer - millis() > modulescantimeout)
     {
       bmsstatus = Error;
     }
@@ -677,6 +677,21 @@ void loop()
   if (millis() - cleartime > 5000)
   {
     //bms.clearmodules(); // Not functional
+    if (bms.checkcomms())
+    {
+      //no missing modules
+      SERIALCONSOLE.println("  ");
+      SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
+      SERIALCONSOLE.println("  ");
+    }
+    else
+    {
+      //missing module
+      SERIALCONSOLE.println("  ");
+      SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
+      SERIALCONSOLE.println("  ");
+      bmsstatus = Error;
+    }
   }
   if (millis() - looptime1 > settings.chargerspd)
   {

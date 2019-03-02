@@ -43,6 +43,8 @@ class BMSModuleManager
     void printPackSummary();
     void printPackDetails(int digits);
 
+    bool checkcomms();
+
 
   private:
     float packVolt;                         // All modules added together

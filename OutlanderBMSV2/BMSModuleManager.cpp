@@ -31,6 +31,26 @@ void BMSModuleManager::clearmodules()
   }
 }
 
+bool BMSModuleManager::checkcomms()
+{
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting())
+    {
+      if (modules[y].isReset())
+      {
+        //Do nothing as the counter has been reset
+      }
+      else
+      {
+        return false;
+      }
+    }
+    modules[y].setReset(false);
+  }
+  return true;
+}
+
 int BMSModuleManager::seriescells()
 {
   spack = 0;
@@ -62,6 +82,7 @@ void BMSModuleManager::decodecan(CAN_message_t &msg)
     CMU = (((msg.id & 0xFF0) - 0x600) >> 4);
   }
   modules[CMU].setExists(true);
+  modules[CMU].setReset(true);
   modules[CMU].decodecan(Id, msg);
 }
 
