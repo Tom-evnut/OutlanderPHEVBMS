@@ -17,7 +17,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 190228;
+int firmver = 190302;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -135,6 +135,7 @@ float chargerend = 0; //V before Charge Voltage to turn off the finishing charge
 int chargertoggle = 0;
 int ncharger = 1; // number of chargers
 
+
 //variables
 int outputstate = 0;
 int incomingByte = 0;
@@ -142,6 +143,8 @@ int storagemode = 0;
 int x = 0;
 int balancecells;
 int cellspresent = 0;
+int modulescantimeout = 5000;
+uint32_t cantimer = 0;
 
 //Debugging modes//////////////////
 int debug = 1;
@@ -561,6 +564,11 @@ void loop()
 
         case (Error):
           Discharge = 0;
+          digitalWrite(OUT4, LOW);
+          digitalWrite(OUT3, LOW);//turn off charger
+          digitalWrite(OUT2, LOW);
+          digitalWrite(OUT1, LOW);//turn off discharge
+          contctrl = 0; //turn off out 5 and 6
           /*
                     if (digitalRead(IN3) == HIGH) //detect AC present for charging
                     {
@@ -653,6 +661,10 @@ void loop()
       {
         bmsstatus = Error;
       }
+    }
+    if(cantimer - millis() > modulescantimeout)
+    {
+      bmsstatus = Error;
     }
     alarmupdate();
     if (CSVdebug != 1)
@@ -2487,6 +2499,7 @@ void canread()
   if (inMsg.id > 0x600 && inMsg.id < 0x800)//do mitsubishi magic if ids are ones identified to be modules
   {
     bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
+    cantimer = millis();
   }
   if (inMsg.id > 0x80000600 && inMsg.id < 0x80000800)//do mitsubishi magic if ids are ones identified to be modules
   {
