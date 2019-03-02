@@ -398,7 +398,7 @@ void BMSModuleManager::printAllCSV(unsigned long timestamp, float current, int S
     {
       SERIALCONSOLE.print(timestamp);
       SERIALCONSOLE.print(",");
-      SERIALCONSOLE.print(current);
+      SERIALCONSOLE.print(current, 0);
       SERIALCONSOLE.print(",");
       SERIALCONSOLE.print(SOC);
       SERIALCONSOLE.print(",");
@@ -423,7 +423,7 @@ void BMSModuleManager::printAllCSV(unsigned long timestamp, float current, int S
     {
       Serial2.print(timestamp);
       Serial2.print(",");
-      Serial2.print(current);
+      Serial2.print(current, 0);
       Serial2.print(",");
       Serial2.print(SOC);
       Serial2.print(",");
