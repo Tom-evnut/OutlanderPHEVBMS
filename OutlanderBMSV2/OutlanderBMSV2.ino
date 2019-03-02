@@ -608,6 +608,10 @@ void loop()
         bmsstatus = Error;
         ErrorReason =1;
       }
+      else
+      {
+        bmsstatus = Boot;
+      }
     }
     else //In 'vehicle' mode
     {
