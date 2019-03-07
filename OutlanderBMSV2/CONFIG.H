@@ -36,7 +36,7 @@
 
 #define MAX_MODULE_ADDR     0x3E
 
-#define EEPROM_VERSION      0x10    //update any time EEPROM struct below is changed.
+#define EEPROM_VERSION      0x11    //update any time EEPROM struct below is changed.
 #define EEPROM_PAGE         0
 
 typedef struct {
@@ -85,8 +85,8 @@ typedef struct {
   int ncur;
   int chargertype;
   int chargerspd;
-    uint16_t UnderDur;
+  uint16_t UnderDur;
   uint16_t CurDead;
-    float DisTaper;
-    bool ChargerDirect;
+  float DisTaper;
+  bool ChargerDirect;
 } EEPROMSettings;
