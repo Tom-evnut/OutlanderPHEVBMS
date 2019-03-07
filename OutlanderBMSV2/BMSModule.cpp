@@ -37,6 +37,7 @@ void BMSModule::clearmodule()
   temperatures[1] = 0.0f;
   temperatures[2] = 0.0f;
   exists = false;
+  reset = false;
   moduleAddress = 0;
 }
 
