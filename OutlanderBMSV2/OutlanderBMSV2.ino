@@ -679,7 +679,7 @@ void loop()
 
     resetwdog();
   }
-  if (millis() - cleartime > 5000)
+  if (millis() - cleartime > 30000)
   {
     //bms.clearmodules(); // Not functional
     if (bms.checkcomms())
