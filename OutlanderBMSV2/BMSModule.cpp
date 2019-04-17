@@ -163,10 +163,18 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
   }
   else
   {
-    SERIALCONSOLE.println("  ");
-    SERIALCONSOLE.print("   Counter Till Can Error : ");
-    SERIALCONSOLE.println(lasterror + timeout - millis() );
-    if (millis() - lasterror > timeout)
+    if (millis() - lasterror < timeout)
+    {
+      if (lasterror + timeout - millis() < 5000)
+      {
+        SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.print("Module");
+        SERIALCONSOLE.print(moduleAddress);
+        SERIALCONSOLE.print("Counter Till Can Error : ");
+        SERIALCONSOLE.println(lasterror + timeout - millis() );
+      }
+    }
+    else
     {
       for (int i = 0; i < 8; i++)
       {
