@@ -38,7 +38,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 190428;
+int firmver = 190528;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -720,7 +720,7 @@ void loop()
     currentlimit();
     VEcan();
 
-    if (cellspresent == 0)
+    if (cellspresent == 0 && SOCset == 1)
     {
       cellspresent = bms.seriescells();//set amount of connected cells, might need delay
     }
