@@ -722,7 +722,8 @@ void loop()
 
     if (cellspresent == 0 && SOCset == 1)
     {
-      cellspresent = bms.seriescells();//set amount of connected cells, might need delay
+      cellspresent = bms.seriescells();
+       bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
     }
     else
     {
@@ -1171,10 +1172,6 @@ void updateSOC()
 {
   if (SOCset == 0)
   {
-    if (millis() > 9000)
-    {
-      bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
-    }
     if (millis() > 10000)
     {
       SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
