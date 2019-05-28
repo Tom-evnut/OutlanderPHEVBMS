@@ -723,11 +723,11 @@ void loop()
     if (cellspresent == 0 && SOCset == 1)
     {
       cellspresent = bms.seriescells();
-       bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+      bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
     }
     else
     {
-      if (cellspresent != bms.seriescells()) //detect a fault in cells detected
+      if (cellspresent != bms.seriescells() || cellspresent != (settings.Scells * settings.Pstrings)) //detect a fault in cells detected
       {
         SERIALCONSOLE.println("  ");
         SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
