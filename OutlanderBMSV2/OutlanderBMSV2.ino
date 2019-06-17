@@ -38,7 +38,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 190528;
+int firmver = 190617;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -235,6 +235,8 @@ void loadSettings()
   settings.UnderDur = 5000; //ms of allowed undervoltage before throwing open stopping discharge.
   settings.CurDead = 5;// mV of dead band on current sensor
   settings.ChargerDirect = 1; //1 - charger is always connected to HV battery // 0 - Charger is behind the contactors
+  settings.TempConv = 0.0038;// Temperature scale
+  settings.TempOff = -52; //Temperature offset
 }
 
 
@@ -357,7 +359,7 @@ void setup()
 
   digitalWrite(led, HIGH);
   bms.setPstrings(settings.Pstrings);
-  bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+  bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
 
   ///precharge timer kickers
   Pretimer = millis();
@@ -723,7 +725,7 @@ void loop()
     if (cellspresent == 0 && SOCset == 1)
     {
       cellspresent = bms.seriescells();
-      bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+      bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
     }
     else
     {
@@ -1623,7 +1625,7 @@ void menu()
 {
 
   incomingByte = Serial.read(); // read the incoming byte:
-  if (menuload == 4)
+  if (menuload == 4) //debug
   {
     switch (incomingByte)
     {
@@ -1823,7 +1825,7 @@ void menu()
         {
           settings.IgnoreTemp = 0;
         }
-        bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+        bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
         menuload = 1;
         incomingByte = 'i';
         break;
@@ -1833,12 +1835,34 @@ void menu()
         {
           settings.IgnoreVolt = Serial.parseInt();
           settings.IgnoreVolt = settings.IgnoreVolt * 0.001;
-          bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+          bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
           // Serial.println(settings.IgnoreVolt);
           menuload = 1;
           incomingByte = 'i';
         }
         break;
+
+      case '3':
+        if (Serial.available() > 0)
+        {
+          settings.TempConv = Serial.parseInt();
+          settings.TempConv = settings.TempConv * 0.0001;
+          bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
+          // Serial.println(settings.IgnoreVolt);
+          menuload = 1;
+          incomingByte = 'i';
+        }
+
+      case '4':
+        if (Serial.available() > 0)
+        {
+          settings.TempOff = Serial.parseInt();
+          settings.TempOff = settings.TempOff * -1;
+          bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
+          // Serial.println(settings.IgnoreVolt);
+          menuload = 1;
+          incomingByte = 'i';
+        }
 
       case 113: //q to go back to main menu
 
@@ -2266,6 +2290,10 @@ void menu()
         SERIALCONSOLE.print("2 - Voltage Under Which To Ignore Cells:");
         SERIALCONSOLE.print(settings.IgnoreVolt * 1000, 0);
         SERIALCONSOLE.println("mV");
+        SERIALCONSOLE.print("3 - Temp Scaling Setting:");
+        SERIALCONSOLE.println(settings.TempConv,4);
+        SERIALCONSOLE.print("4 - Temp Offset Setting:");
+        SERIALCONSOLE.println(settings.TempOff);
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 8;
         break;

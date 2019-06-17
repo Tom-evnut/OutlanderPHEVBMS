@@ -177,10 +177,13 @@ void BMSModuleManager::setPstrings(int Pstrings)
   Pstring = Pstrings;
 }
 
-void BMSModuleManager::setSensors(int sensor, float Ignore)
+void BMSModuleManager::setSensors(int sensor, float Ignore,float tempconvin, int tempoffin)
 {
   tempsens = sensor;
   ignorevolt = Ignore;
+  tempconv = tempconvin;
+  tempoff = tempoffin;
+  
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting())
@@ -189,6 +192,7 @@ void BMSModuleManager::setSensors(int sensor, float Ignore)
       Serial.print('x');
       modules[x].settempsensor(sensor);
       modules[x].setIgnoreCell(Ignore);
+       modules[x].setTempconv(tempconvin, tempoffin);
     }
   }
 }
@@ -226,7 +230,7 @@ float BMSModuleManager::getAvgTemperature()
   if (numFoundModules != numFoundModulesOLD)
   {
     numFoundModulesOLD = numFoundModules;
-    setSensors(tempsens, ignorevolt);
+    setSensors(tempsens, ignorevolt, tempconv, tempoff);
   }
   return avg;
 }

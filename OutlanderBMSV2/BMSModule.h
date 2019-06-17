@@ -37,6 +37,7 @@ class BMSModule
     void setReset(bool ex);
     void settempsensor(int tempsensor);
     void setIgnoreCell(float Ignore);
+    void setTempconv(float tempconvin, int tempoffin);
     
     
   private:
@@ -63,4 +64,6 @@ class BMSModule
     uint32_t lasterror;
     uint8_t cmuerror;
     uint16_t timeout;
+    float tempconv;
+    int tempoff;
 };

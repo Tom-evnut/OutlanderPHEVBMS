@@ -47,9 +47,9 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
   {
     case 0x1:
       balstat = msg.buf[0];
-      temperatures[0] = (msg.buf[2] * 256 + msg.buf[3]) * 0.001;
-      temperatures[1] = (msg.buf[4] * 256 + msg.buf[5]) * 0.001;
-      temperatures[2] = (msg.buf[6] * 256 + msg.buf[7]) * 0.001;
+      temperatures[0] = (msg.buf[2] * 256 + msg.buf[3]) * tempconv + tempoff;
+      temperatures[1] = (msg.buf[4] * 256 + msg.buf[5]) * tempconv + tempoff;
+      temperatures[2] = (msg.buf[6] * 256 + msg.buf[7]) * tempconv + tempoff;
       break;
 
     case 0x3:
@@ -556,3 +556,8 @@ void BMSModule::setIgnoreCell(float Ignore)
   Serial.println();
 }
 
+void BMSModule::setTempconv(float tempconvin, int tempoffin)
+{
+  tempconv = tempconvin;
+  tempoff = tempoffin;
+}

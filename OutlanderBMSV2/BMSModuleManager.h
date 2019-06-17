@@ -26,7 +26,7 @@ class BMSModuleManager
     void setOverTemp(float newVal);
     void setBalanceV(float newVal);
     void setBalanceHyst(float newVal);
-    void setSensors(int sensor, float Ignore);
+    void setSensors(int sensor, float Ignore,float tempconvin, int tempoffin);
     float getPackVoltage();
     float getAvgTemperature();
     float getHighTemperature();
@@ -65,6 +65,8 @@ class BMSModuleManager
     int spack;
     float ignorevolt;
     int tempsens;
+    float tempconv;
+    int tempoff;
     /*
       void sendBatterySummary();
       void sendModuleSummary(int module);
