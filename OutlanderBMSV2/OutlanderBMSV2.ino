@@ -1465,8 +1465,8 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[1] = highByte(uint16_t(bms.getPackVoltage() * 100));
   msg.buf[2] = lowByte(long(currentact / 100));
   msg.buf[3] = highByte(long(currentact / 100));
-  msg.buf[4] = lowByte(uint16_t(bms.getAvgTemperature() * 10));
-  msg.buf[5] = highByte(uint16_t(bms.getAvgTemperature() * 10));
+  msg.buf[4] = lowByte(int16_t(bms.getAvgTemperature() * 10));
+  msg.buf[5] = highByte(int16_t(bms.getAvgTemperature() * 10));
   msg.buf[6] = 0;
   msg.buf[7] = 0;
   Can0.write(msg);
@@ -1852,6 +1852,7 @@ void menu()
           menuload = 1;
           incomingByte = 'i';
         }
+        break;
 
       case '4':
         if (Serial.available() > 0)
@@ -1863,6 +1864,7 @@ void menu()
           menuload = 1;
           incomingByte = 'i';
         }
+        break;
 
       case 113: //q to go back to main menu
 
@@ -2291,7 +2293,7 @@ void menu()
         SERIALCONSOLE.print(settings.IgnoreVolt * 1000, 0);
         SERIALCONSOLE.println("mV");
         SERIALCONSOLE.print("3 - Temp Scaling Setting:");
-        SERIALCONSOLE.println(settings.TempConv,4);
+        SERIALCONSOLE.println(settings.TempConv, 4);
         SERIALCONSOLE.print("4 - Temp Offset Setting:");
         SERIALCONSOLE.println(settings.TempOff);
         SERIALCONSOLE.println("q - Go back to menu");
