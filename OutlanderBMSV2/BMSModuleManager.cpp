@@ -370,12 +370,13 @@ void BMSModuleManager::printPackSummary()
   }
 }
 
-void BMSModuleManager::printPackDetails(int digits)
+void BMSModuleManager::printPackDetails(int digits, bool showbal)
 {
   uint8_t faults;
   uint8_t alerts;
   uint8_t COV;
   uint8_t CUV;
+  uint8_t bal;
   int cellNum = 0;
 
   Logger::console("");
@@ -392,6 +393,7 @@ void BMSModuleManager::printPackDetails(int digits)
       alerts = modules[y].getAlerts();
       COV = modules[y].getCOVCells();
       CUV = modules[y].getCUVCells();
+      bal = modules[y].getBalStat();
 
       SERIALCONSOLE.print("Module #");
       SERIALCONSOLE.print(y);
@@ -407,6 +409,17 @@ void BMSModuleManager::printPackDetails(int digits)
         SERIALCONSOLE.print(": ");
         SERIALCONSOLE.print(modules[y].getCellVoltage(i), digits);
         SERIALCONSOLE.print("V");
+        if (showbal == 1)
+        {
+          if((bal & (0x1 << i)) > 0)
+          {
+            SERIALCONSOLE.print(" X");
+          }
+          else
+          {
+            SERIALCONSOLE.print(" -");
+          }
+        }
       }
       SERIALCONSOLE.println();
       SERIALCONSOLE.print(" Temp 1: ");
@@ -415,7 +428,16 @@ void BMSModuleManager::printPackDetails(int digits)
       SERIALCONSOLE.print(modules[y].getTemperature(1));
       SERIALCONSOLE.print("C Temp 3: ");
       SERIALCONSOLE.print(modules[y].getTemperature(2));
-      SERIALCONSOLE.println("C");
+      
+        if (showbal == 1)
+        {
+          SERIALCONSOLE.print("C  Bal Stat: ");
+          SERIALCONSOLE.print( bal, BIN);
+        }
+      else
+      {
+        SERIALCONSOLE.println("C");
+      }
 
     }
   }

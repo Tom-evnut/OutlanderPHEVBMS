@@ -5,10 +5,10 @@ class BMSModule
 {
   public:
     BMSModule();
-    void decodecan(int Id,CAN_message_t &msg);
+    void decodecan(int Id, CAN_message_t &msg);
     void readStatus();
     void clearmodule();
-     int getscells();
+    int getscells();
     bool readModuleValues();
     float getCellVoltage(int cell);
     float getLowCellV();
@@ -38,8 +38,10 @@ class BMSModule
     void settempsensor(int tempsensor);
     void setIgnoreCell(float Ignore);
     void setTempconv(float tempconvin, int tempoffin);
-    
-    
+    uint8_t getBalStat();
+
+
+
   private:
     float cellVolt[8];          // calculated as 16 bit value * 6.250 / 16383 = volts
     float lowestCellVolt[8];
@@ -60,7 +62,7 @@ class BMSModule
     int sensor;
     uint8_t moduleAddress;     //1 to 0x3E
     int scells;
-    int balstat;
+    uint8_t balstat;
     uint32_t lasterror;
     uint8_t cmuerror;
     uint16_t timeout;

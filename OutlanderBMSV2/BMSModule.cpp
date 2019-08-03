@@ -524,6 +524,11 @@ int BMSModule::getAddress()
   return moduleAddress;
 }
 
+uint8_t BMSModule::getBalStat()
+{
+  return balstat;
+}
+
 bool BMSModule::isExisting()
 {
   return exists;

@@ -38,7 +38,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 190617;
+int firmver = 190803;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -177,6 +177,7 @@ int debugCur = 0;
 int CSVdebug = 0;
 int menuload = 0;
 int debugdigits = 2; //amount of digits behind decimal for voltage reading
+bool showbal = 0; //turn on showing balancing status
 int Charged = 0;
 
 ADC *adc = new ADC(); // adc object
@@ -698,7 +699,7 @@ void loop()
     if (debug != 0)
     {
       printbmsstat();
-      bms.printPackDetails(debugdigits);
+      bms.printPackDetails(debugdigits, showbal);
     }
     if (CSVdebug != 0)
     {
@@ -1699,6 +1700,12 @@ void menu()
         incomingByte = 'd';
         break;
 
+      case '0':
+        menuload = 1;
+        showbal = !showbal;
+        incomingByte = 'd';
+        break;
+
       case 113: //q for quite menu
 
         menuload = 0;
@@ -2462,6 +2469,9 @@ void menu()
         SERIALCONSOLE.println(CSVdebug);
         SERIALCONSOLE.print("9 - Decimal Places to Show :");
         SERIALCONSOLE.println(debugdigits);
+        SERIALCONSOLE.print("0 - Show Balancing Status :");
+        SERIALCONSOLE.println(showbal);
+        
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 4;
         break;
