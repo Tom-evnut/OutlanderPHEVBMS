@@ -11,7 +11,7 @@
 #define SERIALBMS  Serial3
 
 // victron serial VE direct bus config
-#define VE Serial2
+#define canSerial Serial2
 
 #define REG_DEV_STATUS      1
 #define REG_GPAI            1
@@ -71,6 +71,7 @@ typedef struct {
   int socvolt[4];
   int invertcur;
   int cursens;
+  int curcan;
   int voltsoc;
   uint16_t offset1;
   uint16_t offset2;
@@ -91,4 +92,5 @@ typedef struct {
   bool ChargerDirect;
   float TempConv;
   int TempOff;
+  bool SerialCan;
 } EEPROMSettings;

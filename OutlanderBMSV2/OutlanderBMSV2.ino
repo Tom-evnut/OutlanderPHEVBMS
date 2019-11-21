@@ -29,16 +29,18 @@
 #include <FlexCAN.h> https://github.com/collin80/FlexCAN_Library
 #include <SPI.h>
 #include <Filters.h>//https://github.com/JonHub/Filters
+#include <Serial_CAN_Module.h>
 
 #define CPU_REBOOT (_reboot_Teensyduino_());
 
+Serial_CAN can;
 BMSModuleManager bms;
 SerialConsole console;
 EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 190803;
+int firmver = 190907;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -123,7 +125,7 @@ byte rxBuf[8];
 char msgString[128];                        // Array to store serial string
 uint32_t inbox;
 signed long CANmilliamps;
-
+signed long voltage1, voltage2, voltage3 = 0; //mV only with ISAscale sensor
 //struct can_frame canMsg;
 //MCP2515 CAN1(10); //set CS pin for can controlelr
 
@@ -158,6 +160,9 @@ float chargerend = 0; //V before Charge Voltage to turn off the finishing charge
 int chargertoggle = 0;
 int ncharger = 1; // number of chargers
 
+//serial canbus expansion
+unsigned long id = 0;
+unsigned char dta[8];
 
 //variables
 int outputstate = 0;
@@ -219,6 +224,7 @@ void loadSettings()
   settings.socvolt[3] = 90; //Voltage and SOC curve for voltage based SOC calc
   settings.invertcur = 0; //Invert current sensor direction
   settings.cursens = 2;
+  settings.curcan = 1;
   settings.voltsoc = 0; //SOC purely voltage based
   settings.Pretime = 5000; //ms of precharge time
   settings.conthold = 50; //holding duty cycle for contactor 0-255
@@ -238,6 +244,7 @@ void loadSettings()
   settings.ChargerDirect = 1; //1 - charger is always connected to HV battery // 0 - Charger is behind the contactors
   settings.TempConv = 0.0038;// Temperature scale
   settings.TempOff = -52; //Temperature offset
+  settings.SerialCan = 0; //Serial canbus or display: 0-display 1- canbus expansion
 }
 
 
@@ -303,7 +310,7 @@ void setup()
   SERIALCONSOLE.println("Starting up!");
   SERIALCONSOLE.println("SimpBMS V2 Outlander");
 
-  Serial2.begin(115200);
+  canSerial.begin(115200);
 
   // Display reason the Teensy was last reset
   Serial.println();
@@ -379,7 +386,10 @@ void loop()
   {
     menu();
   }
-
+  if (settings.SerialCan == 1)
+  {
+    SerialCanRecieve();
+  }
   if (outputcheck != 1)
   {
     contcon();
@@ -742,7 +752,10 @@ void loop()
     alarmupdate();
     if (CSVdebug != 1)
     {
-      dashupdate();
+      if (settings.SerialCan == 0)
+      {
+        dashupdate(); //Info on serial bus 2
+      }
     }
 
     resetwdog();
@@ -1538,89 +1551,6 @@ void VEcan() //communication with Victron system over CAN
 
 }
 
-void BMVmessage()//communication with the Victron Color Control System over VEdirect
-{
-  lasttime = millis();
-  x = 0;
-  VE.write(13);
-  VE.write(10);
-  VE.write(myStrings[0]);
-  VE.write(9);
-  VE.print(bms.getPackVoltage() * 1000, 0);
-  VE.write(13);
-  VE.write(10);
-  VE.write(myStrings[2]);
-  VE.write(9);
-  VE.print(currentact);
-  VE.write(13);
-  VE.write(10);
-  VE.write(myStrings[4]);
-  VE.write(9);
-  VE.print(ampsecond * 0.27777777777778, 0); //consumed ah
-  VE.write(13);
-  VE.write(10);
-  VE.write(myStrings[6]);
-  VE.write(9);
-  VE.print(SOC * 10); //SOC
-  x = 8;
-  while (x < 20)
-  {
-    VE.write(13);
-    VE.write(10);
-    VE.write(myStrings[x]);
-    x ++;
-    VE.write(9);
-    VE.write(myStrings[x]);
-    x ++;
-  }
-  VE.write(13);
-  VE.write(10);
-  VE.write("Checksum");
-  VE.write(9);
-  VE.write(0x50); //0x59
-  delay(10);
-
-  while (x < 44)
-  {
-    VE.write(13);
-    VE.write(10);
-    VE.write(myStrings[x]);
-    x ++;
-    VE.write(9);
-    VE.write(myStrings[x]);
-    x ++;
-  }
-  /*
-    VE.write(13);
-    VE.write(10);
-    VE.write(myStrings[32]);
-    VE.write(9);
-    VE.print(bms.getLowVoltage()*1000,0);
-    VE.write(13);
-    VE.write(10);
-    VE.write(myStrings[34]);
-    VE.write(9);
-    VE.print(bms.getHighVoltage()*1000,0);
-    x=36;
-
-    while(x < 43)
-    {
-     VE.write(13);
-     VE.write(10);
-     VE.write(myStrings[x]);
-     x ++;
-     VE.write(9);
-     VE.write(myStrings[x]);
-     x ++;
-    }
-  */
-  VE.write(13);
-  VE.write(10);
-  VE.write("Checksum");
-  VE.write(9);
-  VE.write(231);
-}
-
 // Settings menu
 void menu()
 {
@@ -1719,6 +1649,23 @@ void menu()
     }
   }
 
+  if (menuload == 9)
+  {
+    switch (incomingByte)
+    {
+      case '2':
+        menuload = 1;
+        settings.SerialCan = !settings.SerialCan;
+        incomingByte = 'x';
+        break;
+      case 113: //q to go back to main menu
+
+        menuload = 0;
+        incomingByte = 115;
+        break;
+    }
+  }
+
   if (menuload == 2)
   {
     switch (incomingByte)
@@ -1811,6 +1758,18 @@ void menu()
         incomingByte = 'c';
         break;
 
+      case '7': //s for switch sensor
+        if (settings.curcan == 1)
+        {
+          settings.curcan = 2;
+        }
+        else
+        {
+          settings.curcan = 1;
+        }
+        menuload = 1;
+        incomingByte = 'c';
+        break;
 
       default:
         // if nothing else matches, do the default
@@ -2283,7 +2242,31 @@ void menu()
       case 'R'://restart
         CPU_REBOOT ;
         break;
+      case 'x': //Ignore Value Settings
+        while (Serial.available()) {
+          Serial.read();
+        }
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println("Experimental Settings");
+        SERIALCONSOLE.println();
+        SERIALCONSOLE.println("Do not use unless you know what it does!!!!!");
+        SERIALCONSOLE.print("2 - Serial Port Function:");
+        if (settings.SerialCan == 0)
+        {
+          SERIALCONSOLE.println("Serial Display");
+        }
+        else
+        {
+          SERIALCONSOLE.println("Can Bus Expansion");
+        }
 
+        SERIALCONSOLE.println("q - Go back to menu");
+        menuload = 9;
+        break;
       case 'i': //Ignore Value Settings
         while (Serial.available()) {
           Serial.read();
@@ -2471,7 +2454,7 @@ void menu()
         SERIALCONSOLE.println(debugdigits);
         SERIALCONSOLE.print("0 - Show Balancing Status :");
         SERIALCONSOLE.println(showbal);
-        
+
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 4;
         break;
@@ -2526,6 +2509,18 @@ void menu()
           SERIALCONSOLE.print("6 - Current Sensor Deadband:");
           SERIALCONSOLE.print(settings.CurDead);
           SERIALCONSOLE.println(" mV");
+        }
+        if ( settings.cursens == Canbus)
+        {
+          SERIALCONSOLE.print("7 -Can Current Sensor :");
+          if (settings.curcan == 1)
+          {
+            SERIALCONSOLE.println(" LEM CAB series ");
+          }
+          if (settings.curcan == 2)
+          {
+            SERIALCONSOLE.println(" IsaScale IVT-S ");
+          }
         }
         SERIALCONSOLE.println("q - Go back to menu");
         menuload = 2;
@@ -2639,6 +2634,7 @@ void menu()
     SERIALCONSOLE.println("k - Contactor and Gauge Settings");
     SERIALCONSOLE.println("i - Ignore Value Settings");
     SERIALCONSOLE.println("d - Debug Settings");
+    SERIALCONSOLE.println("x - Experimental Settings");
     SERIALCONSOLE.println("R - Restart BMS");
     SERIALCONSOLE.println("q - exit menu");
     debug = 0;
@@ -2650,14 +2646,33 @@ void canread()
 {
   Can0.read(inMsg);
   // Read data: len = data length, buf = data byte(s)
-  switch (inMsg.id)
+  if (settings.curcan == 1)
   {
-    case 0x3c2:
-      CAB300();
-      break;
-
-    default:
-      break;
+    switch (inMsg.id)
+    {
+      case 0x3c2:
+        CAB300();
+        break;
+      default:
+        break;
+    }
+  }
+  if (settings.curcan == 2)
+  {
+    switch (inMsg.id)
+    {
+      case 0x521: //
+        CANmilliamps = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);
+        break;
+      case 0x522: //
+        voltage1 = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);
+        break;
+      case 0x523: //
+        voltage2 = rxBuf[5] + (rxBuf[4] << 8) + (rxBuf[3] << 16) + (rxBuf[2] << 24);
+        break;
+      default:
+        break;
+    }
   }
 
   if (inMsg.id > 0x600 && inMsg.id < 0x800)//do mitsubishi magic if ids are ones identified to be modules
@@ -2730,93 +2745,104 @@ void currentlimit()
     discurrent = 0;
     chargecurrent = 0;
   }
+  /*
+    settings.PulseCh = 600; //Peak Charge current in 0.1A
+    settings.PulseChDur = 5000; //Ms of discharge pulse derating
+    settings.PulseDi = 600; //Peak Charge current in 0.1A
+    settings.PulseDiDur = 5000; //Ms of discharge pulse derating
+  */
   else
   {
-    ///////////temperature based current limit////////////
+
+    ///Start at no derating///
+    discurrent = settings.discurrentmax;
+    chargecurrent = settings.chargecurrentmax;
+
+
+    ///////All hard limits to into zeros
     if (bms.getAvgTemperature() < settings.UnderTSetpoint)
     {
       discurrent = 0;
       chargecurrent = 0;
     }
-    else
+    if (bms.getAvgTemperature() > settings.OverTSetpoint)
     {
-      if (bms.getAvgTemperature() < settings.ChargeTSetpoint)
-      {
-        discurrent = settings.discurrentmax;
-        chargecurrent = map(bms.getAvgTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, 0, settings.chargecurrentmax);
-      }
-      else
-      {
-        if (bms.getAvgTemperature() < settings.DisTSetpoint)
-        {
-          discurrent = settings.discurrentmax;
-          chargecurrent = settings.chargecurrentmax;
-        }
-        else
-        {
-          if (bms.getAvgTemperature() < settings.OverTSetpoint)
-          {
-            discurrent = map(bms.getAvgTemperature(), settings.DisTSetpoint, settings.OverTSetpoint, settings.discurrentmax, 0);
-            chargecurrent = settings.chargecurrentmax;
-          }
-          else
-          {
-            discurrent = 0;
-            chargecurrent = 0;
-          }
-        }
-      }
+      discurrent = 0;
+      chargecurrent = 0;
     }
-    ///voltage influence on current///
-    if (storagemode == 1)
+    if (bms.getHighCellVolt() > settings.OverVSetpoint)
     {
-      if (bms.getHighCellVolt() > (settings.StoreVsetpoint - settings.ChargeHys))
-      {
-        chargecurrent = map(bms.getHighCellVolt(), (settings.StoreVsetpoint - settings.ChargeHys), settings.StoreVsetpoint, settings.chargecurrentmax, settings.chargecurrentend);
-      }
-      if (bms.getHighCellVolt() > settings.OverVSetpoint)
-      {
-        chargecurrent = 0;
-      }
+      chargecurrent = 0;
     }
-    else
+    if (bms.getHighCellVolt() > settings.OverVSetpoint)
     {
-      if (bms.getHighCellVolt() > (settings.ChargeVsetpoint - settings.ChargeHys))
-      {
-        chargecurrent = map(bms.getHighCellVolt(), (settings.ChargeVsetpoint - settings.ChargeHys), settings.ChargeVsetpoint, settings.chargecurrentmax, settings.chargecurrentend);
-      }
-      if (bms.getHighCellVolt() > settings.OverVSetpoint)
-      {
-        chargecurrent = 0;
-      }
+      chargecurrent = 0;
     }
-
     if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
     {
       discurrent = 0;
     }
-    else
+
+
+    //Modifying discharge current///
+
+    if (discurrent > 0)
     {
-      if (bms.getLowCellVolt() > (settings.DischVsetpoint + settings.DisTaper))
+      //Temperature based///
+
+      if (bms.getAvgTemperature() > settings.DisTSetpoint)
       {
-        discurrent = settings.discurrentmax;
+        discurrent = discurrent - map(bms.getAvgTemperature(), settings.DisTSetpoint, settings.OverTSetpoint, 0, settings.discurrentmax);
+      }
+      //Voltagee based///
+      if (bms.getLowCellVolt() > settings.UnderVSetpoint || bms.getLowCellVolt() > settings.DischVsetpoint)
+      {
+        if (bms.getLowCellVolt() < (settings.DischVsetpoint + settings.DisTaper))
+        {
+          discurrent = discurrent - map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), settings.chargecurrentmax, 0);
+        }
+      }
+
+    }
+
+    //Modifying Charge current///
+    if (chargecurrent > 0)
+    {
+      //Temperature based///
+      if (bms.getAvgTemperature() < settings.ChargeTSetpoint)
+      {
+        chargecurrent = chargecurrent - map(bms.getAvgTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, settings.chargecurrentmax, 0);
+      }
+      //Voltagee based///
+      if (storagemode == 1)
+      {
+        if (bms.getHighCellVolt() > (settings.StoreVsetpoint - settings.ChargeHys))
+        {
+          chargecurrent = chargecurrent - map(bms.getHighCellVolt(), (settings.StoreVsetpoint - settings.ChargeHys), settings.StoreVsetpoint, settings.chargecurrentend, settings.chargecurrentmax);
+        }
       }
       else
       {
-        discurrent = map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), 0, settings.chargecurrentmax);
+        if (bms.getHighCellVolt() > (settings.ChargeVsetpoint - settings.ChargeHys))
+        {
+          chargecurrent = chargecurrent - map(bms.getHighCellVolt(), (settings.ChargeVsetpoint - settings.ChargeHys), settings.ChargeVsetpoint, settings.chargecurrentend, settings.chargecurrentmax);
+        }
       }
     }
-    ///No negative currents///
-    if (discurrent < 0)
-    {
-      discurrent = 0;
-    }
-    if (chargecurrent < 0)
-    {
-      chargecurrent = 0;
-    }
+
+  }
+  ///No negative currents///
+
+  if (discurrent < 0)
+  {
+    discurrent = 0;
+  }
+  if (chargecurrent < 0)
+  {
+    chargecurrent = 0;
   }
 }
+
 
 void inputdebug()
 {
@@ -3159,6 +3185,22 @@ void chargercomms()
     }
     msg.buf[7] = 0x01; //HV charging
     Can0.write(msg);
+  }
+}
+
+void SerialCanRecieve()
+{
+  if (can.recv(&id, dta))
+  {
+    Serial.print("GET DATA FROM ID: ");
+    Serial.println(id, HEX);
+    for (int i = 0; i < 8; i++)
+    {
+      Serial.print("0x");
+      Serial.print(dta[i], HEX);
+      Serial.print('\t');
+    }
+    Serial.println();
   }
 }
 ///END/////////
