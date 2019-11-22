@@ -29,7 +29,7 @@
 #include <FlexCAN.h> https://github.com/collin80/FlexCAN_Library
 #include <SPI.h>
 #include <Filters.h>//https://github.com/JonHub/Filters
-#include <Serial_CAN_Module.h>
+#include "Serial_CAN_Module_Teensy.h" //https://github.com/tomdebree/Serial_CAN_Teensy
 
 #define CPU_REBOOT (_reboot_Teensyduino_());
 
