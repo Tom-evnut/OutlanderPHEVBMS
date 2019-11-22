@@ -822,7 +822,13 @@ void alarmupdate()
   alarm[1] = 0;
   if (bms.getLowTemperature() < settings.UnderTSetpoint)
   {
-    alarm[1] = 0x01;
+  //  alarm[1] = 0x01;
+   Serial.println();
+   Serial.print("LOW: ");
+   Serial.print(bms.getLowTemperature());
+   Serial.print("|");
+   Serial.print("UT SET : ");
+   Serial.println(settings.UnderTSetpoint);
   }
   alarm[3] = 0;
   if ((bms.getHighCellVolt() - bms.getLowCellVolt()) > settings.CellGap)
