@@ -198,12 +198,12 @@ void BMSModuleManager::setSensors(int sensor, float Ignore,float tempconvin, int
 float BMSModuleManager::getAvgTemperature()
 {
   float avg = 0.0f;
+      lowTemp = 999.0f;
+    highTemp = -999.0f;
   int y = 0; //counter for modules below -70 (no sensors connected)
   numFoundModules = 0;
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
-    lowTemp = 999.0;
-    highTemp = -999.0;
     if (modules[x].isExisting())
     {
       numFoundModules++;
