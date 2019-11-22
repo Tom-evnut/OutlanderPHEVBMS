@@ -233,6 +233,7 @@ void loadSettings()
   settings.convlow = 643; // mV/A current sensor low range channel
   settings.offset1 = 1750; //mV mid point of channel 1
   settings.offset2 = 1750;//mV mid point of channel 2
+  settings.changecur = 20000;//mA change overpoint
   settings.gaugelow = 50; //empty fuel gauge pwm
   settings.gaugehigh = 255; //full fuel gauge pwm
   settings.ESSmode = 0; //activate ESS mode
@@ -822,13 +823,13 @@ void alarmupdate()
   alarm[1] = 0;
   if (bms.getLowTemperature() < settings.UnderTSetpoint)
   {
-  //  alarm[1] = 0x01;
-   Serial.println();
-   Serial.print("LOW: ");
-   Serial.print(bms.getLowTemperature());
-   Serial.print("|");
-   Serial.print("UT SET : ");
-   Serial.println(settings.UnderTSetpoint);
+    //  alarm[1] = 0x01;
+    Serial.println();
+    Serial.print("LOW: ");
+    Serial.print(bms.getLowTemperature());
+    Serial.print("|");
+    Serial.print("UT SET : ");
+    Serial.println(settings.UnderTSetpoint);
   }
   alarm[3] = 0;
   if ((bms.getHighCellVolt() - bms.getLowCellVolt()) > settings.CellGap)
@@ -1049,7 +1050,7 @@ void getcurrent()
   {
     if ( settings.cursens == Analoguedual)
     {
-      if (currentact < 19000 && currentact > -19000)
+      if (currentact < settings.changecur && currentact > -settings.changecur)
       {
         sensor = 1;
         adc->startContinuous(ACUR1, ADC_0);
@@ -1163,7 +1164,7 @@ void getcurrent()
     }
     if (sensor == 2)
     {
-      if (currentact > 180000 || currentact < -18000 )
+      if (currentact > settings.changecur || currentact < -settings.changecur )
       {
         ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
         lasttime = millis();
@@ -1700,6 +1701,16 @@ void menu()
         if (Serial.available() > 0)
         {
           settings.ncur = Serial.parseInt();
+        }
+        menuload = 1;
+        incomingByte = 'c';
+        break;
+
+      case '8':
+        menuload = 1;
+        if (Serial.available() > 0)
+        {
+          settings.changecur = Serial.parseInt();
         }
         menuload = 1;
         incomingByte = 'c';
@@ -2509,12 +2520,16 @@ void menu()
           SERIALCONSOLE.print("5 - Analogue High Range Conv:");
           SERIALCONSOLE.print(settings.convhigh * 0.1, 1);
           SERIALCONSOLE.println(" mV/A");
+          SERIALCONSOLE.print("8 - Current Channel ChangeOver:");
+          SERIALCONSOLE.print(settings.changecur * 0.001);
+          SERIALCONSOLE.println(" A");
         }
         if (settings.cursens == Analoguesing || settings.cursens == Analoguedual)
         {
           SERIALCONSOLE.print("6 - Current Sensor Deadband:");
           SERIALCONSOLE.print(settings.CurDead);
           SERIALCONSOLE.println(" mV");
+
         }
         if ( settings.cursens == Canbus)
         {
