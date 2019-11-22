@@ -177,20 +177,20 @@ void BMSModuleManager::setPstrings(int Pstrings)
   Pstring = Pstrings;
 }
 
-void BMSModuleManager::setSensors(int sensor, float Ignore,float tempconvin, int tempoffin)
+void BMSModuleManager::setSensors(int sensor, float Ignore, float tempconvin, int tempoffin)
 {
   tempsens = sensor;
   ignorevolt = Ignore;
   tempconv = tempconvin;
   tempoff = tempoffin;
-  
+
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting())
     {
       modules[x].settempsensor(sensor);
       modules[x].setIgnoreCell(Ignore);
-       modules[x].setTempconv(tempconvin, tempoffin);
+      modules[x].setTempconv(tempconvin, tempoffin);
     }
   }
 }
@@ -198,8 +198,8 @@ void BMSModuleManager::setSensors(int sensor, float Ignore,float tempconvin, int
 float BMSModuleManager::getAvgTemperature()
 {
   float avg = 0.0f;
-      lowTemp = 999.0f;
-    highTemp = -999.0f;
+  lowTemp = 999.0f;
+  highTemp = -999.0f;
   int y = 0; //counter for modules below -70 (no sensors connected)
   numFoundModules = 0;
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
@@ -411,7 +411,7 @@ void BMSModuleManager::printPackDetails(int digits, bool showbal)
         SERIALCONSOLE.print("V");
         if (showbal == 1)
         {
-          if((bal & (0x1 << i)) > 0)
+          if ((bal & (0x1 << i)) > 0)
           {
             SERIALCONSOLE.print(" X");
           }
@@ -428,12 +428,12 @@ void BMSModuleManager::printPackDetails(int digits, bool showbal)
       SERIALCONSOLE.print(modules[y].getTemperature(1));
       SERIALCONSOLE.print("C Temp 3: ");
       SERIALCONSOLE.print(modules[y].getTemperature(2));
-      
-        if (showbal == 1)
-        {
-          SERIALCONSOLE.print("C  Bal Stat: ");
-          SERIALCONSOLE.print( bal, BIN);
-        }
+
+      if (showbal == 1)
+      {
+        SERIALCONSOLE.print("C  Bal Stat: ");
+        SERIALCONSOLE.print( bal, BIN);
+      }
       else
       {
         SERIALCONSOLE.println("C");
