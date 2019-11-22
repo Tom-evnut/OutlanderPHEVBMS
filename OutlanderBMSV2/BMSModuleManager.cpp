@@ -202,6 +202,8 @@ float BMSModuleManager::getAvgTemperature()
   numFoundModules = 0;
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
+    lowTemp = 999.0;
+    highTemp = -999.0;
     if (modules[x].isExisting())
     {
       numFoundModules++;
