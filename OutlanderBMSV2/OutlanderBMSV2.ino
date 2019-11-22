@@ -229,8 +229,8 @@ void loadSettings()
   settings.Pretime = 5000; //ms of precharge time
   settings.conthold = 50; //holding duty cycle for contactor 0-255
   settings.Precurrent = 1000; //ma before closing main contator
-  settings.convhigh = 58; // mV/A current sensor high range channel
-  settings.convlow = 643; // mV/A current sensor low range channel
+  settings.convhigh = 580; // mV/A current sensor high range channel
+  settings.convlow = 6430; // mV/A current sensor low range channel
   settings.offset1 = 1750; //mV mid point of channel 1
   settings.offset2 = 1750;//mV mid point of channel 2
   settings.changecur = 20000;//mA change overpoint
@@ -2520,9 +2520,7 @@ void menu()
           SERIALCONSOLE.print("5 - Analogue High Range Conv:");
           SERIALCONSOLE.print(settings.convhigh * 0.01, 2);
           SERIALCONSOLE.println(" mV/A");
-          SERIALCONSOLE.print("8 - Current Channel ChangeOver:");
-          SERIALCONSOLE.print(settings.changecur * 0.001);
-          SERIALCONSOLE.println(" A");
+
         }
         if (settings.cursens == Analoguesing || settings.cursens == Analoguedual)
         {
@@ -2531,6 +2529,14 @@ void menu()
           SERIALCONSOLE.println(" mV");
 
         }
+        if ( settings.cursens == Analoguedual)
+        {
+
+          SERIALCONSOLE.print("8 - Current Channel ChangeOver:");
+          SERIALCONSOLE.print(settings.changecur * 0.001);
+          SERIALCONSOLE.println(" A");
+        }
+
         if ( settings.cursens == Canbus)
         {
           SERIALCONSOLE.print("7 -Can Current Sensor :");
