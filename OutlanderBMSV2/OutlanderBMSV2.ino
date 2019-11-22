@@ -815,12 +815,12 @@ void alarmupdate()
   {
     alarm[0] |= 0x10;
   }
-  if (bms.getAvgTemperature() > settings.OverTSetpoint)
+  if (bms.getHighTemperature() > settings.OverTSetpoint)
   {
     alarm[0] |= 0x40;
   }
   alarm[1] = 0;
-  if (bms.getAvgTemperature() < settings.UnderTSetpoint)
+  if (bms.getLowTemperature() < settings.UnderTSetpoint)
   {
     alarm[1] = 0x01;
   }
@@ -842,12 +842,12 @@ void alarmupdate()
     warning[0] |= 0x10;
   }
 
-  if (bms.getAvgTemperature() > (settings.OverTSetpoint - settings.WarnToff))
+  if (bms.getHighTemperature() > (settings.OverTSetpoint - settings.WarnToff))
   {
     warning[0] |= 0x40;
   }
   warning[1] = 0;
-  if (bms.getAvgTemperature() < (settings.UnderTSetpoint + settings.WarnToff))
+  if (bms.getLowTemperature() < (settings.UnderTSetpoint + settings.WarnToff))
   {
     warning[1] = 0x01;
   }
@@ -909,11 +909,11 @@ void printbmsstat()
     {
       SERIALCONSOLE.print(": Cell Imbalance ");
     }
-    if (bms.getAvgTemperature() > settings.OverTSetpoint)
+    if (bms.getHighTemperature() > settings.OverTSetpoint)
     {
       SERIALCONSOLE.print(": Over Temp ");
     }
-    if (bms.getAvgTemperature() < settings.UnderTSetpoint)
+    if (bms.getLowTemperature() < settings.UnderTSetpoint)
     {
       SERIALCONSOLE.print(": Under Temp ");
     }
@@ -1492,10 +1492,10 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[1] = alarm[1]; // High Discharge Current | Low Temperature
   msg.buf[2] = alarm[2]; //Internal Failure | High Charge current
   msg.buf[3] = alarm[3];// Cell Imbalance
-  msg.buf[4] = 0;
-  msg.buf[5] = 0;
-  msg.buf[6] = 0;
-  msg.buf[7] = 0;
+  msg.buf[4] = warning[0];//High temp  Low Voltage | High Voltage
+  msg.buf[5] = warning[1];// High Discharge Current | Low Temperature
+  msg.buf[6] = warning[2];//Internal Failure | High Charge current
+  msg.buf[7] = warning[3];// Cell Imbalance
   Can0.write(msg);
 
   msg.id  = 0x35E;
@@ -2760,12 +2760,12 @@ void currentlimit()
 
 
     ///////All hard limits to into zeros
-    if (bms.getAvgTemperature() < settings.UnderTSetpoint)
+    if (bms.getLowTemperature() < settings.UnderTSetpoint)
     {
       //discurrent = 0; Request Daniel
       chargecurrent = 0;
     }
-    if (bms.getAvgTemperature() > settings.OverTSetpoint)
+    if (bms.getHighTemperature() > settings.OverTSetpoint)
     {
       discurrent = 0;
       chargecurrent = 0;
@@ -2790,9 +2790,9 @@ void currentlimit()
     {
       //Temperature based///
 
-      if (bms.getAvgTemperature() > settings.DisTSetpoint)
+      if (bms.getLowTemperature() > settings.DisTSetpoint)
       {
-        discurrent = discurrent - map(bms.getAvgTemperature(), settings.DisTSetpoint, settings.OverTSetpoint, 0, settings.discurrentmax);
+        discurrent = discurrent - map(bms.getLowTemperature(), settings.DisTSetpoint, settings.OverTSetpoint, 0, settings.discurrentmax);
       }
       //Voltagee based///
       if (bms.getLowCellVolt() > settings.UnderVSetpoint || bms.getLowCellVolt() > settings.DischVsetpoint)
@@ -2809,9 +2809,9 @@ void currentlimit()
     if (chargecurrent > 0)
     {
       //Temperature based///
-      if (bms.getAvgTemperature() < settings.ChargeTSetpoint)
+      if (bms.getHighTemperature() < settings.ChargeTSetpoint)
       {
-        chargecurrent = chargecurrent - map(bms.getAvgTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, settings.chargecurrentmax, 0);
+        chargecurrent = chargecurrent - map(bms.getHighTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, settings.chargecurrentmax, 0);
       }
       //Voltagee based///
       if (storagemode == 1)
