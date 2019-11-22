@@ -188,8 +188,6 @@ void BMSModuleManager::setSensors(int sensor, float Ignore,float tempconvin, int
   {
     if (modules[x].isExisting())
     {
-      Serial.println(x);
-      Serial.print('x');
       modules[x].settempsensor(sensor);
       modules[x].setIgnoreCell(Ignore);
        modules[x].setTempconv(tempconvin, tempoffin);

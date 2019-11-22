@@ -1787,7 +1787,7 @@ void menu()
         {
           settings.IgnoreTemp = Serial.parseInt();
         }
-        if (settings.IgnoreTemp > 2)
+        if (settings.IgnoreTemp > 3)
         {
           settings.IgnoreTemp = 0;
         }
