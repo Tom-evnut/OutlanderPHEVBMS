@@ -1211,11 +1211,10 @@ void getcurrent()
   }
   currentact = settings.ncur * currentact;
   RawCur = 0;
-
+/*
   AverageCurrentTotal = AverageCurrentTotal - RunningAverageBuffer[NextRunningAverage];
 
   RunningAverageBuffer[NextRunningAverage] = currentact;
-
   if (debugCur != 0)
   {
     SERIALCONSOLE.print(" | ");
@@ -1249,6 +1248,7 @@ void getcurrent()
     SERIALCONSOLE.print(" | ");
     SERIALCONSOLE.print(NextRunningAverage);
   }
+  */
 
 }
 
