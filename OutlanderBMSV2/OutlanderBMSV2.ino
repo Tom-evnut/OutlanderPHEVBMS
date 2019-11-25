@@ -40,7 +40,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 191122;
+int firmver = 191125;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -141,9 +141,9 @@ int sensor = 1;
 
 //running average
 const int RunningAverageCount = 100;
-int32_t RunningAverageBuffer[RunningAverageCount];
+float RunningAverageBuffer[RunningAverageCount];
 int NextRunningAverage = 0;
-int32_t  AverageCurrent;
+float  AverageCurrent;
 float  AverageCurrentTotal;
 
 //Variables for SOC calc
@@ -834,12 +834,14 @@ void alarmupdate()
   if (bms.getLowTemperature() < settings.UnderTSetpoint)
   {
     //  alarm[1] = 0x01;
+    /*
     Serial.println();
     Serial.print("LOW: ");
     Serial.print(bms.getLowTemperature());
     Serial.print("|");
     Serial.print("UT SET : ");
     Serial.println(settings.UnderTSetpoint);
+    */
   }
   alarm[3] = 0;
   if ((bms.getHighCellVolt() - bms.getLowCellVolt()) > settings.CellGap)
@@ -1212,7 +1214,7 @@ void getcurrent()
 
   AverageCurrentTotal = AverageCurrentTotal - RunningAverageBuffer[NextRunningAverage];
 
-  RunningAverageBuffer[NextRunningAverage] = int32_t(currentact);
+  RunningAverageBuffer[NextRunningAverage] = currentact;
 
   if (debugCur != 0)
   {
@@ -2051,7 +2053,7 @@ void menu()
         incomingByte = 'e';
         break;
 
-      case '8':
+      case '9':
         if (Serial.available() > 0)
         {
           settings.ChargeTSetpoint = Serial.parseInt();
@@ -2458,7 +2460,7 @@ void menu()
         }
         SERIALCONSOLE.println();
 
-        SERIALCONSOLE.print("8 - Charge Current derate Low: ");
+        SERIALCONSOLE.print("9 - Charge Current derate Low: ");
         SERIALCONSOLE.print(settings.ChargeTSetpoint);
         SERIALCONSOLE.println(" C");
         SERIALCONSOLE.println("q - Go back to menu");
