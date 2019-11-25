@@ -2901,7 +2901,7 @@ void currentlimit()
     {
       //Temperature based///
 
-      if (bms.getLowTemperature() > settings.DisTSetpoint)
+      if (bms.getHighTemperature() > settings.DisTSetpoint)
       {
         discurrent = discurrent - map(bms.getHighTemperature(), settings.DisTSetpoint, settings.OverTSetpoint, 0, settings.discurrentmax);
       }
@@ -2920,7 +2920,7 @@ void currentlimit()
     if (chargecurrent > 0)
     {
       //Temperature based///
-      if (bms.getHighTemperature() < settings.ChargeTSetpoint)
+      if (bms.getLowTemperature() < settings.ChargeTSetpoint)
       {
         chargecurrent = chargecurrent - map(bms.getLowTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, settings.chargecurrentmax, 0);
       }
