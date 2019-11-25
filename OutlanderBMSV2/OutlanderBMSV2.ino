@@ -140,11 +140,11 @@ int currentsense = 14;
 int sensor = 1;
 
 //running average
-const int RunningAverageCount = 10;
+const int RunningAverageCount = 100;
 int32_t RunningAverageBuffer[RunningAverageCount];
-int NextRunningAverage;
+int NextRunningAverage = 0;
 int32_t  AverageCurrent;
-int32_t  AverageCurrentTotal;
+float  AverageCurrentTotal;
 
 //Variables for SOC calc
 int SOC = 100; //State of Charge
@@ -502,7 +502,7 @@ void loop()
             }
           }
         }
-        if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
+        if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
         {
           digitalWrite(OUT1, LOW);//turn off discharge
           contctrl = contctrl & 254;
@@ -517,7 +517,7 @@ void loop()
           }
         }
 
-        if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint || bms.getAvgTemperature() > settings.OverTSetpoint)
+        if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
         {
           digitalWrite(OUT2, HIGH);//trip breaker
         }
@@ -1206,30 +1206,39 @@ void getcurrent()
 
   RunningAverageBuffer[NextRunningAverage] = int32_t(currentact);
 
+  if (debugCur != 0)
+  {
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(AverageCurrentTotal);
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(RunningAverageBuffer[NextRunningAverage]);
+    SERIALCONSOLE.print(" | ");
+  }
   AverageCurrentTotal = AverageCurrentTotal + RunningAverageBuffer[NextRunningAverage];
-
+  if (debugCur != 0)
+  {
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(AverageCurrentTotal);
+    SERIALCONSOLE.print(" | ");
+  }
 
   NextRunningAverage = NextRunningAverage + 1;
 
   if (NextRunningAverage > RunningAverageCount)
   {
-    NextRunningAverage = 1;
+    NextRunningAverage = 0;
   }
 
-  AverageCurrent = AverageCurrentTotal / RunningAverageCount;
+  AverageCurrent = AverageCurrentTotal / (RunningAverageCount + 1);
 
   if (debugCur != 0)
   {
-    SERIALCONSOLE.print(" | ");
-    SERIALCONSOLE.print(RunningAverageBuffer[NextRunningAverage]); 
-    SERIALCONSOLE.print(" | ");
     SERIALCONSOLE.print(AverageCurrent);
     SERIALCONSOLE.print(" | ");
     SERIALCONSOLE.print(AverageCurrentTotal);
     SERIALCONSOLE.print(" | ");
     SERIALCONSOLE.print(NextRunningAverage);
   }
-
 
 }
 
@@ -1301,9 +1310,6 @@ void updateSOC()
     SERIALCONSOLE.print("% SOC ");
     SERIALCONSOLE.print(ampsecond * 0.27777777777778, 2);
     SERIALCONSOLE.print ("mAh");
-    SERIALCONSOLE.print(" | ");
-    SERIALCONSOLE.print(AverageCurrent);
-    SERIALCONSOLE.println("mA");
   }
 }
 
