@@ -12,7 +12,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.cur
   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
@@ -1050,7 +1050,7 @@ void getcurrent()
   {
     if ( settings.cursens == Analoguedual)
     {
-      if (currentact < settings.changecur && currentact > -settings.changecur)
+      if (currentact < settings.changecur && currentact > (settings.changecur*-1))
       {
         sensor = 1;
         adc->startContinuous(ACUR1, ADC_0);
@@ -1135,6 +1135,7 @@ void getcurrent()
       }
     }
   }
+  
   if (settings.invertcur == 1)
   {
     RawCur = RawCur * -1;
@@ -1144,6 +1145,8 @@ void getcurrent()
   if (debugCur != 0)
   {
     SERIALCONSOLE.print(lowpassFilter.output());
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(settings.changecur);
   }
 
   currentact = lowpassFilter.output();
@@ -1164,7 +1167,7 @@ void getcurrent()
     }
     if (sensor == 2)
     {
-      if (currentact > settings.changecur || currentact < -settings.changecur )
+      if (currentact > settings.changecur || currentact < (settings.changecur * -1) )
       {
         ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
         lasttime = millis();
