@@ -40,7 +40,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 191203;
+int firmver = 191206;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -759,11 +759,14 @@ void loop()
     {
       if (cellspresent != bms.seriescells() || cellspresent != (settings.Scells * settings.Pstrings)) //detect a fault in cells detected
       {
-        SERIALCONSOLE.println("  ");
-        SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
-        SERIALCONSOLE.println("  ");
-        bmsstatus = Error;
-        ErrorReason = 3;
+        if (debug != 0)
+        {
+          SERIALCONSOLE.println("  ");
+          SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
+          SERIALCONSOLE.println("  ");
+          bmsstatus = Error;
+          ErrorReason = 3;
+        }
       }
     }
     alarmupdate();
@@ -796,9 +799,12 @@ void loop()
     else
     {
       //missing module
-      SERIALCONSOLE.println("  ");
-      SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
-      SERIALCONSOLE.println("  ");
+      if (debug != 0)
+      {
+        SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
+        SERIALCONSOLE.println("  ");
+      }
       bmsstatus = Error;
       ErrorReason = 4;
     }
@@ -841,12 +847,12 @@ void alarmupdate()
   {
     //  alarm[1] = 0x01;
     /*
-    Serial.println();
-    Serial.print("LOW: ");
-    Serial.print(bms.getLowTemperature());
-    Serial.print("|");
-    Serial.print("UT SET : ");
-    Serial.println(settings.UnderTSetpoint);
+      Serial.println();
+      Serial.print("LOW: ");
+      Serial.print(bms.getLowTemperature());
+      Serial.print("|");
+      Serial.print("UT SET : ");
+      Serial.println(settings.UnderTSetpoint);
     */
   }
   alarm[3] = 0;
@@ -1217,43 +1223,43 @@ void getcurrent()
   }
   currentact = settings.ncur * currentact;
   RawCur = 0;
-/*
-  AverageCurrentTotal = AverageCurrentTotal - RunningAverageBuffer[NextRunningAverage];
+  /*
+    AverageCurrentTotal = AverageCurrentTotal - RunningAverageBuffer[NextRunningAverage];
 
-  RunningAverageBuffer[NextRunningAverage] = currentact;
-  if (debugCur != 0)
-  {
-    SERIALCONSOLE.print(" | ");
-    SERIALCONSOLE.print(AverageCurrentTotal);
-    SERIALCONSOLE.print(" | ");
-    SERIALCONSOLE.print(RunningAverageBuffer[NextRunningAverage]);
-    SERIALCONSOLE.print(" | ");
-  }
-  AverageCurrentTotal = AverageCurrentTotal + RunningAverageBuffer[NextRunningAverage];
-  if (debugCur != 0)
-  {
-    SERIALCONSOLE.print(" | ");
-    SERIALCONSOLE.print(AverageCurrentTotal);
-    SERIALCONSOLE.print(" | ");
-  }
+    RunningAverageBuffer[NextRunningAverage] = currentact;
+    if (debugCur != 0)
+    {
+      SERIALCONSOLE.print(" | ");
+      SERIALCONSOLE.print(AverageCurrentTotal);
+      SERIALCONSOLE.print(" | ");
+      SERIALCONSOLE.print(RunningAverageBuffer[NextRunningAverage]);
+      SERIALCONSOLE.print(" | ");
+    }
+    AverageCurrentTotal = AverageCurrentTotal + RunningAverageBuffer[NextRunningAverage];
+    if (debugCur != 0)
+    {
+      SERIALCONSOLE.print(" | ");
+      SERIALCONSOLE.print(AverageCurrentTotal);
+      SERIALCONSOLE.print(" | ");
+    }
 
-  NextRunningAverage = NextRunningAverage + 1;
+    NextRunningAverage = NextRunningAverage + 1;
 
-  if (NextRunningAverage > RunningAverageCount)
-  {
-    NextRunningAverage = 0;
-  }
+    if (NextRunningAverage > RunningAverageCount)
+    {
+      NextRunningAverage = 0;
+    }
 
-  AverageCurrent = AverageCurrentTotal / (RunningAverageCount + 1);
+    AverageCurrent = AverageCurrentTotal / (RunningAverageCount + 1);
 
-  if (debugCur != 0)
-  {
-    SERIALCONSOLE.print(AverageCurrent);
-    SERIALCONSOLE.print(" | ");
-    SERIALCONSOLE.print(AverageCurrentTotal);
-    SERIALCONSOLE.print(" | ");
-    SERIALCONSOLE.print(NextRunningAverage);
-  }
+    if (debugCur != 0)
+    {
+      SERIALCONSOLE.print(AverageCurrent);
+      SERIALCONSOLE.print(" | ");
+      SERIALCONSOLE.print(AverageCurrentTotal);
+      SERIALCONSOLE.print(" | ");
+      SERIALCONSOLE.print(NextRunningAverage);
+    }
   */
 
 }
@@ -1268,8 +1274,11 @@ void updateSOC()
 
       ampsecond = (SOC * settings.CAP * settings.Pstrings * 10) / 0.27777777777778 ;
       SOCset = 1;
-      SERIALCONSOLE.println("  ");
-      SERIALCONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
+      if (debug != 0)
+      {
+        SERIALCONSOLE.println("  ");
+        SERIALCONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
+      }
     }
   }
   if (settings.cursens == 1)
