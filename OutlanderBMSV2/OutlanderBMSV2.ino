@@ -109,9 +109,9 @@ char* myStrings[] = {"V", "14674", "I", "0", "CE", "-1", "SOC", "800", "TTG", "-
 
 //variables for VE can
 uint16_t chargevoltage = 49100; //max charge voltage in mv
-int chargecurrent;
+int16_t chargecurrent;
 uint16_t disvoltage = 42000; // max discharge voltage in mv
-int discurrent;
+int16_t discurrent;
 
 uint16_t SOH = 100; // SOH place holder
 
