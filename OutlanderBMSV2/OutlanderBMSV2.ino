@@ -2927,7 +2927,7 @@ void currentlimit()
       {
         if (bms.getLowCellVolt() < (settings.DischVsetpoint + settings.DisTaper))
         {
-          discurrent = discurrent - map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), settings.chargecurrentmax, 0);
+          discurrent = discurrent - map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), settings.discurrentmax, 0);
         }
       }
 
