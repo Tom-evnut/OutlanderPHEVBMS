@@ -29,7 +29,7 @@
 #include <FlexCAN.h> https://github.com/collin80/FlexCAN_Library
 #include <SPI.h>
 #include <Filters.h>//https://github.com/JonHub/Filters
-#include "Serial_CAN_Module_Teensy.h" //https://github.com/tomdebree/Serial_CAN_Teensy
+#include "Serial_CAN_Module_TeensyS3.h" //https://github.com/tomdebree/Serial_CAN_Teensy
 
 #define CPU_REBOOT (_reboot_Teensyduino_());
 
@@ -389,10 +389,7 @@ void loop()
   {
     menu();
   }
-  if (settings.SerialCan == 1)
-  {
-    SerialCanRecieve();
-  }
+
   if (outputcheck != 1)
   {
     contcon();
@@ -772,10 +769,7 @@ void loop()
     alarmupdate();
     if (CSVdebug != 1)
     {
-      if (settings.SerialCan == 0)
-      {
         dashupdate(); //Info on serial bus 2
-      }
     }
 
     resetwdog();
@@ -1736,7 +1730,7 @@ void menu()
   {
     switch (incomingByte)
     {
-      case '2':
+      case '1':
         menuload = 1;
         settings.SerialCan = !settings.SerialCan;
         incomingByte = 'x';
@@ -1882,7 +1876,14 @@ void menu()
         }
         if (settings.IgnoreTemp > 3)
         {
-          settings.IgnoreTemp = 0;
+          if (settings.IgnoreTemp == 23 || settings.IgnoreTemp == 12 || settings.IgnoreTemp == 13)
+          {
+
+          }
+          else
+          {
+            settings.IgnoreTemp = 0;
+          }
         }
         bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
         menuload = 1;
@@ -2361,13 +2362,12 @@ void menu()
         SERIALCONSOLE.println();
         SERIALCONSOLE.println();
         SERIALCONSOLE.println();
-        SERIALCONSOLE.println("Experimental Settings");
+        SERIALCONSOLE.println("Expansion Settings");
         SERIALCONSOLE.println();
-        SERIALCONSOLE.println("Do not use unless you know what it does!!!!!");
-        SERIALCONSOLE.print("2 - Serial Port Function:");
+        SERIALCONSOLE.print("1 - Serial Expansionn:");
         if (settings.SerialCan == 0)
         {
-          SERIALCONSOLE.println("Serial Display");
+          SERIALCONSOLE.println("None");
         }
         else
         {
@@ -2762,7 +2762,7 @@ void menu()
     SERIALCONSOLE.println("k - Contactor and Gauge Settings");
     SERIALCONSOLE.println("i - Ignore Value Settings");
     SERIALCONSOLE.println("d - Debug Settings");
-    SERIALCONSOLE.println("x - Experimental Settings");
+    SERIALCONSOLE.println("x - Expansion Settings");
     SERIALCONSOLE.println("R - Restart BMS");
     SERIALCONSOLE.println("q - exit menu");
     debug = 0;
