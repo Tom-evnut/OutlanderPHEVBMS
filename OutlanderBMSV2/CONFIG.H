@@ -94,4 +94,6 @@ typedef struct {
   float TempConv;
   int TempOff;
   bool SerialCan;
+  uint32_t EngIn;
+  uint32_t EngOut;
 } EEPROMSettings;

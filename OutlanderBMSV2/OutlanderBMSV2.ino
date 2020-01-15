@@ -30,6 +30,7 @@
 #include <SPI.h>
 #include <Filters.h>//https://github.com/JonHub/Filters
 #include "Serial_CAN_Module_TeensyS3.h" //https://github.com/tomdebree/Serial_CAN_Teensy
+#include <movingAvg.h>                  // https://github.com/JChristensen/movingAvg
 
 #define CPU_REBOOT (_reboot_Teensyduino_());
 
@@ -40,7 +41,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 191206;
+int firmver = 200115;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -132,19 +133,23 @@ signed long voltage1, voltage2, voltage3 = 0; //mV only with ISAscale sensor
 
 //variables for current calulation
 int value;
-float currentact, RawCur;
+float currentact, RawCur, AverageCurrent, AverageCurrentMin, AverageCurrentSec ;
 float ampsecond;
 unsigned long lasttime;
 unsigned long looptime, UnderTime, looptime1, cleartime = 0; //ms
 int currentsense = 14;
 int sensor = 1;
+unsigned long curloop1 = 0;
 
 //running average
-const int RunningAverageCount = 100;
-float RunningAverageBuffer[RunningAverageCount];
-int NextRunningAverage = 0;
-float  AverageCurrent;
-float  AverageCurrentTotal;
+int SecCount = 0;
+/*
+  const int RunningAverageCount = 100;
+  float RunningAverageBuffer[RunningAverageCount];
+  int NextRunningAverage = 0;
+  float  AverageCurrent;
+  float  AverageCurrentTotal;
+*/
 
 //Variables for SOC calc
 int SOC = 100; //State of Charge
@@ -181,6 +186,7 @@ int outputcheck = 0; //check outputs
 int candebug = 0; //view can frames
 int gaugedebug = 0;
 int debugCur = 0;
+int debugAvgCur = 0;
 int CSVdebug = 0;
 int menuload = 0;
 int debugdigits = 2; //amount of digits behind decimal for voltage reading
@@ -188,6 +194,11 @@ bool showbal = 0; //turn on showing balancing status
 int Charged = 0;
 
 ADC *adc = new ADC(); // adc object
+
+movingAvg myRASec(60);
+movingAvg myRAMin(60);
+movingAvg myRA(100);
+
 void loadSettings()
 {
   Logger::console("Resetting to factory defaults");
@@ -376,6 +387,9 @@ void setup()
   Pretimer = millis();
   Pretimer1  = millis();
   bmsstatus = Boot;
+  myRA.begin(); // explicitly start clean
+  myRASec.begin(); // explicitly start clean
+  myRAMin.begin(); // explicitly start clean
 }
 
 void loop()
@@ -1217,6 +1231,47 @@ void getcurrent()
   }
   currentact = settings.ncur * currentact;
   RawCur = 0;
+  AverageCurrent = myRA.reading(currentact);
+  if (millis() - curloop1 > 1000)
+  {
+    curloop1 = millis();
+    myRA.reset();
+    AverageCurrentSec = myRASec.reading(AverageCurrent);
+    SecCount ++;
+    if (SecCount >= 59)
+    {
+      SecCount = 0;
+      AverageCurrentMin = myRAMin.reading(AverageCurrentSec);
+    }
+    if (debugAvgCur != 0)
+    {
+      SERIALCONSOLE.println();
+      SERIALCONSOLE.print(millis());
+      SERIALCONSOLE.print(" ");
+      SERIALCONSOLE.print(currentact);
+      SERIALCONSOLE.print(" ");
+      SERIALCONSOLE.print(AverageCurrent);
+      SERIALCONSOLE.print(" ");
+      SERIALCONSOLE.print(AverageCurrentSec);
+      SERIALCONSOLE.print(" ");
+      SERIALCONSOLE.print(AverageCurrentMin);
+    }
+  }
+  /*
+    if (debugAvgCur != 0)
+    {
+      SERIALCONSOLE.println();
+      SERIALCONSOLE.print(millis());
+      SERIALCONSOLE.print(" ");
+      SERIALCONSOLE.print(currentact);
+      SERIALCONSOLE.print(" ");
+      SERIALCONSOLE.print(AverageCurrent);
+      SERIALCONSOLE.print(" ");
+      SERIALCONSOLE.print(AverageCurrentSec);
+      SERIALCONSOLE.print(" ");
+      SERIALCONSOLE.print(AverageCurrentMin);
+    }
+  */
   /*
     AverageCurrentTotal = AverageCurrentTotal - RunningAverageBuffer[NextRunningAverage];
 
@@ -1275,13 +1330,7 @@ void updateSOC()
       }
     }
   }
-  if (settings.cursens == 1)
-  {
-    SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
-
-    ampsecond = (SOC * settings.CAP * settings.Pstrings * 10) / 0.27777777777778 ;
-  }
-  if (settings.voltsoc == 1)
+  if (settings.voltsoc == 1 || settings.cursens == 0)
   {
     SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
 
@@ -1625,6 +1674,18 @@ void VEcan() //communication with Victron system over CAN
       Can0.write(msg);
     }
   }
+
+  delay(2);
+  msg.id  = 0x373;
+  msg.len = 8;
+  msg.buf[0] = 0x00;
+  msg.buf[1] = 0x00;
+  msg.buf[2] = 0x02;///firmware high
+  msg.buf[3] = 0x01;///firmware low
+  msg.buf[4] = lowByte(settings.CAP);
+  msg.buf[5] = highByte(settings.CAP);
+  msg.buf[6] = 0x99;
+  msg.buf[7] = 0x01;
 
   delay(2);
   msg.id  = 0x373;
