@@ -271,7 +271,7 @@ uint32_t lastUpdate;
 
 void setup()
 {
-  delay(4000);  //just for easy debugging. It takes a few seconds for USB to come up properly on most OS's
+  //delay(4000);  //just for easy debugging. It takes a few seconds for USB to come up properly on most OS's
   pinMode(ACUR1, INPUT);
   pinMode(ACUR2, INPUT);
   pinMode(IN1, INPUT);
