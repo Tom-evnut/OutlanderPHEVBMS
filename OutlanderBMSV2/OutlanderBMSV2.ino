@@ -41,7 +41,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 90320;
+int firmver = 16320;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -3232,17 +3232,15 @@ void dashupdate()
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.print("current.val=");
-  Serial2.print(currentact/100, 0);
+  Serial2.print(currentact / 100, 0);
   Serial2.write(0xff);  // We always have to send this three lines after each command sent to the nextion display.
   Serial2.write(0xff);
   Serial2.write(0xff);
-
   Serial2.print("temp.val=");
   Serial2.print(bms.getAvgTemperature(), 0);
   Serial2.write(0xff);  // We always have to send this three lines after each command sent to the nextion display.
   Serial2.write(0xff);
   Serial2.write(0xff);
-
   Serial2.print("templow.val=");
   Serial2.print(bms.getLowTemperature(), 0);
   Serial2.write(0xff);  // We always have to send this three lines after each command sent to the nextion display.
@@ -3254,7 +3252,7 @@ void dashupdate()
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.print("volt.val=");
-  Serial2.print(bms.getPackVoltage()*10, 0);
+  Serial2.print(bms.getPackVoltage() * 10, 0);
   Serial2.write(0xff);  // We always have to send this three lines after each command sent to the nextion display.
   Serial2.write(0xff);
   Serial2.write(0xff);
@@ -3278,14 +3276,6 @@ void dashupdate()
   Serial2.write(0xff);  // We always have to send this three lines after each command sent to the nextion display.
   Serial2.write(0xff);
   Serial2.write(0xff);
-  Serial2.write(0xff);
-  Serial2.print("cellbal.val=");
-  /*
-    Serial2.print(bms.getBalancing());
-    Serial2.write(0xff);  // We always have to send this three lines after each command sent to the nextion display.
-    Serial2.write(0xff);
-    Serial2.write(0xff);
-  */
 }
 
 void chargercomms()
