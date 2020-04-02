@@ -431,7 +431,7 @@ void BMSModuleManager::printPackDetails(int digits, bool showbal)
       if (showbal == 1)
       {
         SERIALCONSOLE.print("C  Bal Stat: ");
-        SERIALCONSOLE.print( bal, BIN);
+        SERIALCONSOLE.println( bal, BIN);
       }
       else
       {
