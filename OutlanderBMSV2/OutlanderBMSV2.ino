@@ -722,17 +722,20 @@ void loop()
     }
     else //In 'vehicle' mode
     {
-      if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
+      if (SOCset != 0)
       {
-        if (UnderTime > millis()) //check is last time not undervoltage is longer thatn UnderDur ago
+        if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
         {
-          bmsstatus = Error;
-          ErrorReason = 2;
+          if (UnderTime > millis()) //check is last time not undervoltage is longer thatn UnderDur ago
+          {
+            bmsstatus = Error;
+            ErrorReason = 2;
+          }
         }
-      }
-      else
-      {
-        UnderTime = millis() + settings.UnderDur;
+        else
+        {
+          UnderTime = millis() + settings.UnderDur;
+        }
       }
     }
 
@@ -762,23 +765,25 @@ void loop()
     updateSOC();
     currentlimit();
     VEcan();
-
-    if (cellspresent == 0 && SOCset == 1)
+    if (SOCset == 1)
     {
-      cellspresent = bms.seriescells();
-      bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
-    }
-    else
-    {
-      if (cellspresent != bms.seriescells() || cellspresent != (settings.Scells * settings.Pstrings)) //detect a fault in cells detected
+      if (cellspresent == 0 )
       {
-        if (debug != 0)
+        cellspresent = bms.seriescells();
+        bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
+      }
+      else
+      {
+        if (cellspresent != bms.seriescells() || cellspresent != (settings.Scells * settings.Pstrings)) //detect a fault in cells detected
         {
-          SERIALCONSOLE.println("  ");
-          SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
-          SERIALCONSOLE.println("  ");
-          bmsstatus = Error;
-          ErrorReason = 3;
+          if (debug != 0)
+          {
+            SERIALCONSOLE.println("  ");
+            SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
+            SERIALCONSOLE.println("  ");
+            bmsstatus = Error;
+            ErrorReason = 3;
+          }
         }
       }
     }
