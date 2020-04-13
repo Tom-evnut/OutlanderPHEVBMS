@@ -58,6 +58,7 @@ typedef struct {
   float DisTSetpoint;
   float WarnToff;
   float CellGap;
+  float DischHys;
   uint8_t IgnoreTemp;
   float IgnoreVolt;
   float balanceVoltage;
@@ -87,7 +88,7 @@ typedef struct {
   int ncur;
   int chargertype;
   int chargerspd;
-  uint16_t UnderDur;
+  uint16_t triptime;
   uint16_t CurDead;
   float DisTaper;
   bool ChargerDirect;
@@ -96,4 +97,5 @@ typedef struct {
   bool SerialCan;
   uint32_t EngIn;
   uint32_t EngOut;
+    uint8_t tripcont;
 } EEPROMSettings;
