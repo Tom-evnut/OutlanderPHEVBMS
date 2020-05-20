@@ -239,6 +239,13 @@ float BMSModuleManager::getHighTemperature()
   return highTemp;
 }
 
+int BMSModuleManager::getNumModules()
+{
+  return numFoundModules;
+}
+
+
+
 float BMSModuleManager::getLowTemperature()
 {
   return lowTemp;

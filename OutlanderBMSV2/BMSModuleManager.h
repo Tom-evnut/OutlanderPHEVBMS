@@ -44,6 +44,7 @@ class BMSModuleManager
     void printPackDetails(int digits,bool showbal);
 
     bool checkcomms();
+    int getNumModules();
 
 
   private:
