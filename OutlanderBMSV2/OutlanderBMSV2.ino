@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 200520;
+int firmver = 300520;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -3131,13 +3131,10 @@ void currentlimit()
         discurrent = discurrent - map(bms.getHighTemperature(), settings.DisTSetpoint, settings.OverTSetpoint, 0, settings.discurrentmax);
       }
       //Voltagee based///
-      if (bms.getLowCellVolt() > settings.UnderVSetpoint || bms.getLowCellVolt() > settings.DischVsetpoint)
-      {
         if (bms.getLowCellVolt() < (settings.DischVsetpoint + settings.DisTaper))
         {
           discurrent = discurrent - map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), settings.discurrentmax, 0);
         }
-      }
 
     }
 
