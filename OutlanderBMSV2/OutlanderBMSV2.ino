@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 300520;
+int firmver = 110620;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -867,7 +867,7 @@ void loop()
   }
   if (millis() - cleartime > 30000)
   {
-    //bms.clearmodules(); // Not functional
+    bms.clearmodules(); // Not functional
     if (bms.checkcomms())
     {
       //no missing modules
@@ -893,6 +893,7 @@ void loop()
       bmsstatus = Error;
       ErrorReason = 4;
     }
+     bms.clearmodules(); // Not functional
     cleartime = millis();
   }
   if (millis() - looptime1 > settings.chargerspd)
