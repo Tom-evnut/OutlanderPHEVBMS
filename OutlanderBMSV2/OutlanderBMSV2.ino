@@ -867,7 +867,7 @@ void loop()
   }
   if (millis() - cleartime > 120000)
   {
-    bms.clearmodules(); // Not functional
+    //bms.clearmodules(); // Not functional
     if (bms.checkcomms())
     {
       //no missing modules
