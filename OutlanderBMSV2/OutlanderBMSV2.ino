@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 130620;
+int firmver = 060720;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -806,6 +806,18 @@ void loop()
         {
           UnderTime = millis() + settings.triptime;
         }
+        if (bms.getHighCellVolt() > settings.OverVSetpoint)
+        {
+          if (UnderTime > millis()) //check is last time not undervoltage is longer thatn UnderDur ago
+          {
+            bmsstatus = Error;
+            ErrorReason = 2;
+          }
+        }
+        else
+        {
+          UnderTime = millis() + settings.triptime;
+        }
       }
     }
 
@@ -1090,6 +1102,26 @@ void printbmsstat()
         SERIALCONSOLE.print(" Error ");
         break;
     }
+    if (bms.getLowCellVolt() < settings.UnderVSetpoint)
+    {
+      SERIALCONSOLE.print(": UnderVoltage ");
+    }
+    if (bms.getHighCellVolt() > settings.OverVSetpoint)
+    {
+      SERIALCONSOLE.print(": OverVoltage ");
+    }
+    if ((bms.getHighCellVolt() - bms.getLowCellVolt()) > settings.CellGap)
+    {
+      SERIALCONSOLE.print(": Cell Imbalance ");
+    }
+    if (bms.getHighTemperature() > settings.OverTSetpoint)
+    {
+      SERIALCONSOLE.print(": Over Temp ");
+    }
+    if (bms.getLowTemperature() < settings.UnderTSetpoint)
+    {
+      SERIALCONSOLE.print(": Under Temp ");
+    }
   }
   SERIALCONSOLE.print("  ");
   if (digitalRead(IN3) == HIGH)
@@ -1150,6 +1182,12 @@ void printbmsstat()
   SERIALCONSOLE.print(digitalRead(IN2));
   SERIALCONSOLE.print(digitalRead(IN3));
   SERIALCONSOLE.print(digitalRead(IN4));
+
+  SERIALCONSOLE.print(" Charge Current Limit : ");
+  SERIALCONSOLE.print(chargecurrent * 0.1, 0);
+  SERIALCONSOLE.print(" A DisCharge Current Limit : ");
+  SERIALCONSOLE.print(discurrent * 0.1, 0);
+  SERIALCONSOLE.print(" A");
 }
 
 
@@ -3131,10 +3169,10 @@ void currentlimit()
         discurrent = discurrent - map(bms.getHighTemperature(), settings.DisTSetpoint, settings.OverTSetpoint, 0, settings.discurrentmax);
       }
       //Voltagee based///
-        if (bms.getLowCellVolt() < (settings.DischVsetpoint + settings.DisTaper))
-        {
-          discurrent = discurrent - map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), settings.discurrentmax, 0);
-        }
+      if (bms.getLowCellVolt() < (settings.DischVsetpoint + settings.DisTaper))
+      {
+        discurrent = discurrent - map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), settings.discurrentmax, 0);
+      }
 
     }
 
