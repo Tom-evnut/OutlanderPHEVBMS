@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 060720;
+int firmver = 110720;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -879,32 +879,37 @@ void loop()
   }
   if (millis() - cleartime > 5000)
   {
-    if (bms.checkcomms())
+    if (SOCset == 1)
     {
-      //no missing modules
-      /*
-        SERIALCONSOLE.println("  ");
-        SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
-        SERIALCONSOLE.println("  ");
-      */
-      if (  bmsstatus == Error)
+      if (bms.checkcomms())
       {
-        bmsstatus = Boot;
+        //no missing modules
+        /*
+          SERIALCONSOLE.println("  ");
+          SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
+          SERIALCONSOLE.println("  ");
+        */
+        /*
+          if (  bmsstatus == Error)
+          {
+          bmsstatus = Boot;
+          }
+        */
       }
-    }
-    else
-    {
-      //missing module
-      if (debug != 0)
+      else
       {
-        SERIALCONSOLE.println("  ");
-        SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
-        SERIALCONSOLE.println("  ");
+        //missing module
+        if (debug != 0)
+        {
+          SERIALCONSOLE.println("  ");
+          SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
+          SERIALCONSOLE.println("  ");
+        }
+        bmsstatus = Error;
+        ErrorReason = 4;
       }
-      bmsstatus = Error;
-      ErrorReason = 4;
+      bms.clearmodules();
     }
-    bms.clearmodules(); // Not functional
     cleartime = millis();
   }
   if (millis() - looptime1 > settings.chargerspd)
