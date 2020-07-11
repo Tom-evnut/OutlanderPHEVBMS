@@ -516,11 +516,16 @@ void loop()
           {
             if ((millis() - overtriptimer) > settings.triptime)
             {
-              digitalWrite(OUT3, LOW);//turn off charger
-              contctrl = contctrl & 253;
-              Pretimer = millis();
-              Charged = 1;
-              SOCcharged(2);
+              if (digitalRead(OUT3) == 1)
+              {
+                Serial.println();
+                Serial.println("Over Voltage Trip");
+                digitalWrite(OUT3, LOW);//turn off charger
+                contctrl = contctrl & 253;
+                Pretimer = millis();
+                Charged = 1;
+                SOCcharged(2);
+              }
             }
           }
           else
@@ -528,9 +533,29 @@ void loop()
             overtriptimer = millis();
             if (Charged == 1)
             {
-              if (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
+              if (digitalRead(OUT3) == 0)
               {
-                Charged = 0;
+                if (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
+                {
+                  Serial.println();
+                  Serial.println("Reset Over Voltage Trip Not Charged");
+                  Charged = 0;
+                  digitalWrite(OUT3, HIGH);//turn on charger
+                  if (Pretimer + settings.Pretime < millis())
+                  {
+                    // Serial.println();
+                    //Serial.print(Pretimer);
+                    contctrl = contctrl | 2;
+                  }
+                }
+              }
+            }
+            else
+            {
+              if (digitalRead(OUT3) == 0)
+              {
+                Serial.println();
+                Serial.println("Reset Over Voltage Trip Not Charged");
                 digitalWrite(OUT3, HIGH);//turn on charger
                 if (Pretimer + settings.Pretime < millis())
                 {
@@ -540,36 +565,37 @@ void loop()
                 }
               }
             }
-            else
-            {
-              digitalWrite(OUT3, HIGH);//turn on charger
-              if (Pretimer + settings.Pretime < millis())
-              {
-                // Serial.println();
-                //Serial.print(Pretimer);
-                contctrl = contctrl | 2;
-              }
-            }
           }
         }
+
         if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
         {
-          if ((millis() - undertriptimer) > settings.triptime)
+          if (digitalRead(OUT1) == 1)
           {
-            digitalWrite(OUT1, LOW);//turn off discharge
-            contctrl = contctrl & 254;
-            Pretimer1 = millis();
+            Serial.println();
+            Serial.println("Under Voltage Trip");
+            if ((millis() - undertriptimer) > settings.triptime)
+            {
+              digitalWrite(OUT1, LOW);//turn off discharge
+              contctrl = contctrl & 254;
+              Pretimer1 = millis();
+            }
           }
         }
         else
         {
           undertriptimer = millis();
-          if (bms.getLowCellVolt() > settings.DischVsetpoint + settings.DischHys)
+          if (digitalRead(OUT1) == 0)
           {
-            digitalWrite(OUT1, HIGH);//turn on discharge
-            if (Pretimer1 + settings.Pretime < millis())
+            if (bms.getLowCellVolt() > settings.DischVsetpoint + settings.DischHys)
             {
-              contctrl = contctrl | 1;
+              Serial.println();
+              Serial.println("Reset Under Voltage Trip");
+              digitalWrite(OUT1, HIGH);//turn on discharge
+              if (Pretimer1 + settings.Pretime < millis())
+              {
+                contctrl = contctrl | 1;
+              }
             }
           }
         }
