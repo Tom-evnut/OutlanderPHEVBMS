@@ -572,10 +572,11 @@ void loop()
         {
           if (digitalRead(OUT1) == 1)
           {
-            Serial.println();
-            Serial.println("Under Voltage Trip");
+            
             if ((millis() - undertriptimer) > settings.triptime)
             {
+              Serial.println();
+            Serial.println("Under Voltage Trip");
               digitalWrite(OUT1, LOW);//turn off discharge
               contctrl = contctrl & 254;
               Pretimer1 = millis();
