@@ -208,6 +208,7 @@ void BMSModuleManager::setSensors(int sensor, float Ignore, float tempconvin, in
 
 float BMSModuleManager::getAvgTemperature()
 {
+  
   float avg = 0.0f;
   lowTemp = 999.0f;
   highTemp = -999.0f;

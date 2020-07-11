@@ -526,6 +526,7 @@ void loop()
                 Charged = 1;
                 SOCcharged(2);
               }
+
             }
           }
           else
@@ -533,22 +534,24 @@ void loop()
             overtriptimer = millis();
             if (Charged == 1)
             {
-              if (digitalRead(OUT3) == 0)
+
+              if (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
               {
-                if (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
+                if (digitalRead(OUT3) == 0)
                 {
                   Serial.println();
                   Serial.println("Reset Over Voltage Trip Not Charged");
                   Charged = 0;
                   digitalWrite(OUT3, HIGH);//turn on charger
-                  if (Pretimer + settings.Pretime < millis())
-                  {
-                    // Serial.println();
-                    //Serial.print(Pretimer);
-                    contctrl = contctrl | 2;
-                  }
+                }
+                if (Pretimer + settings.Pretime < millis())
+                {
+                  // Serial.println();
+                  //Serial.print(Pretimer);
+                  contctrl = contctrl | 2;
                 }
               }
+
             }
             else
             {
@@ -557,12 +560,12 @@ void loop()
                 Serial.println();
                 Serial.println("Reset Over Voltage Trip Not Charged");
                 digitalWrite(OUT3, HIGH);//turn on charger
-                if (Pretimer + settings.Pretime < millis())
-                {
-                  // Serial.println();
-                  //Serial.print(Pretimer);
-                  contctrl = contctrl | 2;
-                }
+              }
+              if (Pretimer + settings.Pretime < millis())
+              {
+                // Serial.println();
+                //Serial.print(Pretimer);
+                contctrl = contctrl | 2;
               }
             }
           }
@@ -572,11 +575,11 @@ void loop()
         {
           if (digitalRead(OUT1) == 1)
           {
-            
+
             if ((millis() - undertriptimer) > settings.triptime)
             {
               Serial.println();
-            Serial.println("Under Voltage Trip");
+              Serial.println("Under Voltage Trip");
               digitalWrite(OUT1, LOW);//turn off discharge
               contctrl = contctrl & 254;
               Pretimer1 = millis();
@@ -586,20 +589,22 @@ void loop()
         else
         {
           undertriptimer = millis();
-          if (digitalRead(OUT1) == 0)
+
+          if (bms.getLowCellVolt() > settings.DischVsetpoint + settings.DischHys)
           {
-            if (bms.getLowCellVolt() > settings.DischVsetpoint + settings.DischHys)
+            if (digitalRead(OUT1) == 0)
             {
               Serial.println();
               Serial.println("Reset Under Voltage Trip");
               digitalWrite(OUT1, HIGH);//turn on discharge
-              if (Pretimer1 + settings.Pretime < millis())
-              {
-                contctrl = contctrl | 1;
-              }
+            }
+            if (Pretimer1 + settings.Pretime < millis())
+            {
+              contctrl = contctrl | 1;
             }
           }
         }
+
         if (SOCset == 1)
         {
           if (settings.tripcont == 0)
@@ -906,43 +911,45 @@ void loop()
       dashupdate(); //Info on serial bus 2
     }
 
+    if (millis() - cleartime > 5000)
+    {
+      if (SOCset == 1)
+      {
+        if (bms.checkcomms())
+        {
+          //no missing modules
+          /*
+            SERIALCONSOLE.println("  ");
+            SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
+            SERIALCONSOLE.println("  ");
+          */
+          /*
+            if (  bmsstatus == Error)
+            {
+            bmsstatus = Boot;
+            }
+          */
+        }
+        else
+        {
+          //missing module
+          if (debug != 0)
+          {
+            SERIALCONSOLE.println("  ");
+            SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
+            SERIALCONSOLE.println("  ");
+          }
+          bmsstatus = Error;
+          ErrorReason = 4;
+        }
+        bms.clearmodules();
+      }
+      cleartime = millis();
+    }
+
     resetwdog();
   }
-  if (millis() - cleartime > 5000)
-  {
-    if (SOCset == 1)
-    {
-      if (bms.checkcomms())
-      {
-        //no missing modules
-        /*
-          SERIALCONSOLE.println("  ");
-          SERIALCONSOLE.print(" ALL OK NO MODULE MISSING :) ");
-          SERIALCONSOLE.println("  ");
-        */
-        /*
-          if (  bmsstatus == Error)
-          {
-          bmsstatus = Boot;
-          }
-        */
-      }
-      else
-      {
-        //missing module
-        if (debug != 0)
-        {
-          SERIALCONSOLE.println("  ");
-          SERIALCONSOLE.print("   !!! MODULE MISSING !!!");
-          SERIALCONSOLE.println("  ");
-        }
-        bmsstatus = Error;
-        ErrorReason = 4;
-      }
-      bms.clearmodules();
-    }
-    cleartime = millis();
-  }
+
   if (millis() - looptime1 > settings.chargerspd)
   {
     looptime1 = millis();
