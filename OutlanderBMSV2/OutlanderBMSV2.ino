@@ -809,7 +809,8 @@ void loop()
         if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
         {
           SERIALCONSOLE.println("  ");
-          SERIALCONSOLE.print("   !!! Undervoltage Fault !!!");
+          SERIALCONSOLE.print("   !!! Undervoltage Fault !!! ");
+          SERIALCONSOLE.print(bms.getLowCellVolt());
           SERIALCONSOLE.println("  ");
           bmsstatus = Error;
           ErrorReason = 1;

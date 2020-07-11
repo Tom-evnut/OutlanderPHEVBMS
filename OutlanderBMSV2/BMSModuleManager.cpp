@@ -127,7 +127,13 @@ void BMSModuleManager::getAllVoltTemp()
 
 float BMSModuleManager::getLowCellVolt()
 {
-  LowCellVolt = 5.0;
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    if (modules[x].isExisting())
+    {
+      LowCellVolt = 5.0;
+    }
+  }
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting())
@@ -140,7 +146,13 @@ float BMSModuleManager::getLowCellVolt()
 
 float BMSModuleManager::getHighCellVolt()
 {
-  HighCellVolt = 0.0;
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    if (modules[x].isExisting())
+    {
+      HighCellVolt = 0.0;
+    }
+  }
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting())
