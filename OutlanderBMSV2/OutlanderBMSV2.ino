@@ -869,7 +869,10 @@ void loop()
         }
       }
     }
-    alarmupdate();
+    if (SOCset == 1)
+    {
+      alarmupdate();
+    }
     if (CSVdebug != 1)
     {
       dashupdate(); //Info on serial bus 2
