@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 110720;
+int firmver = 81020;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -91,6 +91,7 @@ byte bmsstatus = 0;
 #define Elcon 4
 #define Victron 5
 #define Coda 6
+#define EltekPC 3
 //
 
 
@@ -168,6 +169,8 @@ float chargerendbulk = 0; //V before Charge Voltage to turn off the bulk charger
 float chargerend = 0; //V before Charge Voltage to turn off the finishing charger/s
 int chargertoggle = 0;
 int ncharger = 1; // number of chargers
+
+byte ChargerSerial[6];
 
 //serial canbus expansion
 unsigned long id = 0;
@@ -1725,25 +1728,28 @@ void calcur()
 
 void VEcan() //communication with Victron system over CAN
 {
-  msg.id  = 0x351;
-  msg.len = 8;
-  if (storagemode == 0)
+  if (settings.chargertype != EltekPC)
   {
-    msg.buf[0] = lowByte(uint16_t((settings.ChargeVsetpoint * settings.Scells ) * 10));
-    msg.buf[1] = highByte(uint16_t((settings.ChargeVsetpoint * settings.Scells ) * 10));
+    msg.id  = 0x351;
+    msg.len = 8;
+    if (storagemode == 0)
+    {
+      msg.buf[0] = lowByte(uint16_t((settings.ChargeVsetpoint * settings.Scells ) * 10));
+      msg.buf[1] = highByte(uint16_t((settings.ChargeVsetpoint * settings.Scells ) * 10));
+    }
+    else
+    {
+      msg.buf[0] = lowByte(uint16_t((settings.StoreVsetpoint * settings.Scells ) * 10));
+      msg.buf[1] = highByte(uint16_t((settings.StoreVsetpoint * settings.Scells ) * 10));
+    }
+    msg.buf[2] = lowByte(chargecurrent);
+    msg.buf[3] = highByte(chargecurrent);
+    msg.buf[4] = lowByte(discurrent );
+    msg.buf[5] = highByte(discurrent);
+    msg.buf[6] = lowByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
+    msg.buf[7] = highByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
+    Can0.write(msg);
   }
-  else
-  {
-    msg.buf[0] = lowByte(uint16_t((settings.StoreVsetpoint * settings.Scells ) * 10));
-    msg.buf[1] = highByte(uint16_t((settings.StoreVsetpoint * settings.Scells ) * 10));
-  }
-  msg.buf[2] = lowByte(chargecurrent);
-  msg.buf[3] = highByte(chargecurrent);
-  msg.buf[4] = lowByte(discurrent );
-  msg.buf[5] = highByte(discurrent);
-  msg.buf[6] = lowByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
-  msg.buf[7] = highByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
-  Can0.write(msg);
 
   msg.id  = 0x355;
   msg.len = 8;
@@ -2292,7 +2298,7 @@ void menu()
 
       case '5': //1 Over Voltage Setpoint
         settings.chargertype = settings.chargertype + 1;
-        if (settings.chargertype > 6)
+        if (settings.chargertype > 7)
         {
           settings.chargertype = 0;
         }
@@ -2723,6 +2729,10 @@ void menu()
           case 6:
             SERIALCONSOLE.print("Coda");
             break;
+            break;
+          case 7:
+            SERIALCONSOLE.print("Eltek PC Charger");
+            break;
         }
         SERIALCONSOLE.println();
         if (settings.chargertype > 0)
@@ -3069,6 +3079,12 @@ void canread()
     {
       case 0x3c2:
         CAB300();
+        break;
+
+      case 0350:
+        for (byte i = 0; i < 5; i++) {
+          ChargerSerial[i] = inMsg.buf[i];
+        }
         break;
       default:
         break;
@@ -3619,7 +3635,46 @@ void chargercomms()
     msg.buf[7] = 0x01; //HV charging
     Can0.write(msg);
   }
+
+  if (settings.chargertype == EltekPC)
+  {
+    uint16_t powerout = 0;
+
+    powerout = (chargecurrent / ncharger);
+
+    if (powerout > 100)
+    {
+      powerout = 1000;
+    }
+    else
+    {
+      powerout = powerout * 10;
+    }
+
+    msg.id  = 0x352;
+    msg.len = 6;
+    msg.buf[0] = 0xFF;
+    msg.buf[1] = 0x01;
+    msg.buf[2] = lowByte(powerout);
+    msg.buf[3] = highByte(powerout);
+    msg.buf[4] = lowByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
+    msg.buf[5] = highByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
+    Can0.write(msg);
+
+
+    msg.id  = 0x352;
+    msg.len = 6;
+    for (byte i = 0; i < 5; i++) {
+      msg.buf[i] = ChargerSerial[i];
+    }
+    msg.buf[5] = 0x01;
+    Can0.write(msg);
+
+  }
 }
+
+
+
 
 void SerialCanRecieve()
 {
