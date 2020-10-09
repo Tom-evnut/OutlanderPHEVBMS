@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 81020;
+int firmver = 91020;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -3081,7 +3081,7 @@ void canread()
         CAB300();
         break;
 
-      case 0350:
+      case 0x350:
         for (byte i = 0; i < 5; i++) {
           ChargerSerial[i] = inMsg.buf[i];
         }
@@ -3662,7 +3662,7 @@ void chargercomms()
     Can0.write(msg);
 
 
-    msg.id  = 0x352;
+    msg.id  = 0x351;
     msg.len = 6;
     for (byte i = 0; i < 5; i++) {
       msg.buf[i] = ChargerSerial[i];
