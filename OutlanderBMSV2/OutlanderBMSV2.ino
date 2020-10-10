@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 91020;
+int firmver = 101020;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -91,7 +91,7 @@ byte bmsstatus = 0;
 #define Elcon 4
 #define Victron 5
 #define Coda 6
-#define EltekPC 3
+#define EltekPC 7
 //
 
 
@@ -3650,18 +3650,6 @@ void chargercomms()
     {
       powerout = powerout * 10;
     }
-
-    msg.id  = 0x352;
-    msg.len = 6;
-    msg.buf[0] = 0xFF;
-    msg.buf[1] = 0x01;
-    msg.buf[2] = lowByte(powerout);
-    msg.buf[3] = highByte(powerout);
-    msg.buf[4] = lowByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
-    msg.buf[5] = highByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
-    Can0.write(msg);
-
-
     msg.id  = 0x351;
     msg.len = 6;
     for (byte i = 0; i < 5; i++) {
@@ -3670,6 +3658,15 @@ void chargercomms()
     msg.buf[5] = 0x01;
     Can0.write(msg);
 
+    msg.id  = 0x352;
+    msg.len = 6;
+    msg.buf[0] = 0xFF;
+    msg.buf[1] = 0x01;
+    msg.buf[2] = highByte(powerout);
+    msg.buf[3] = lowByte(powerout);
+    msg.buf[4] = highByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
+    msg.buf[5] = lowByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
+    Can0.write(msg);
   }
 }
 
