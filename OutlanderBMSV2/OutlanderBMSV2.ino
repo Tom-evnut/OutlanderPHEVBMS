@@ -3651,11 +3651,11 @@ void chargercomms()
       powerout = powerout * 10;
     }
     msg.id  = 0x351;
-    msg.len = 6;
+    msg.len = 7;
     for (byte i = 0; i < 5; i++) {
       msg.buf[i] = ChargerSerial[i];
     }
-    msg.buf[5] = 0x01;
+    msg.buf[6] = 0x01;
     Can0.write(msg);
 
     msg.id  = 0x352;
