@@ -3082,7 +3082,7 @@ void canread()
         break;
 
       case 0x350:
-        for (byte i = 0; i < 5; i++) {
+        for (byte i = 0; i < 6; i++) {
           ChargerSerial[i] = inMsg.buf[i];
         }
         break;
@@ -3652,7 +3652,7 @@ void chargercomms()
     }
     msg.id  = 0x351;
     msg.len = 7;
-    for (byte i = 0; i < 5; i++) {
+    for (byte i = 0; i < 6; i++) {
       msg.buf[i] = ChargerSerial[i];
     }
     msg.buf[6] = 0x01;
