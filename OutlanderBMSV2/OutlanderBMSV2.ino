@@ -635,7 +635,7 @@ void loop()
       else
       {
         
-          digitalWrite(OUT2, HIGH);//trip breaker
+          //digitalWrite(OUT2, HIGH);//trip breaker
           Discharge = 0;
           digitalWrite(OUT4, LOW);
           digitalWrite(OUT3, LOW);//turn off charger
@@ -914,7 +914,7 @@ void loop()
       dashupdate(); //Info on serial bus 2
     }
 
-    if (millis() - cleartime > 5000)
+    if (millis() - cleartime > 10000)
     {
       if (SOCset == 1)
       {
