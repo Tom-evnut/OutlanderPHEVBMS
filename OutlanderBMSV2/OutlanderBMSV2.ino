@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 101020;
+int firmver = 211020;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -634,7 +634,7 @@ void loop()
       }
       else
       {
-        /*
+        
           digitalWrite(OUT2, HIGH);//trip breaker
           Discharge = 0;
           digitalWrite(OUT4, LOW);
@@ -642,7 +642,7 @@ void loop()
           digitalWrite(OUT2, LOW);
           digitalWrite(OUT1, LOW);//turn off discharge
           contctrl = 0; //turn off out 5 and 6
-        */
+        
         if (SOCset == 1)
         {
           if (settings.tripcont == 0)
