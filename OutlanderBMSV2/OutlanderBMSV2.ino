@@ -591,8 +591,8 @@ void loop()
               Serial.println();
               Serial.println("Under Voltage Trip");
               digitalWrite(OUT1, LOW);//turn off discharge
-              contctrl = contctrl & 254;
-              Pretimer1 = millis();
+             // contctrl = contctrl & 254;
+             // Pretimer1 = millis();
             }
           }
         }
