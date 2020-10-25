@@ -43,7 +43,7 @@ EEPROMSettings settings;
 
 
 /////Version Identifier/////////
-int firmver = 241020;
+int firmver = 251020;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -643,7 +643,6 @@ void loop()
       }
       else
       {
-
         //digitalWrite(OUT2, HIGH);//trip breaker
         Discharge = 0;
         digitalWrite(OUT4, LOW);
@@ -664,13 +663,13 @@ void loop()
             digitalWrite(OUT2, LOW);//turn off contactor
             digitalWrite(OUT4, LOW);//ensure precharge is low
           }
-          if (bms.getLowCellVolt() > settings.UnderVSetpoint || bms.getHighCellVolt() < settings.OverVSetpoint || bms.getHighTemperature() < settings.OverTSetpoint)
+          
+          if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint && bms.getHighTemperature() < settings.OverTSetpoint && cellspresent == bms.seriescells() && cellspresent == (settings.Scells * settings.Pstrings))
           {
             bmsstatus = Boot;
           }
         }
       }
-
       //pwmcomms();
     }
     else
