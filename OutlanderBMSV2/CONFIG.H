@@ -98,4 +98,5 @@ typedef struct {
   uint32_t EngIn;
   uint32_t EngOut;
     uint8_t tripcont;
+    int16_t chargecurrentcold;
 } EEPROMSettings;
