@@ -36,14 +36,17 @@
 #define READ_RESTART()     (*(volatile uint32_t *)RESTART_ADDR)
 #define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
 #define CPU_REBOOT WRITE_RESTART(0x5FA0004)
+
 Serial_CAN can;
 BMSModuleManager bms;
 SerialConsole console;
 EEPROMSettings settings;
 
+// Create an IntervalTimer object
+IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 210114;
+int firmver = 210116;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -185,7 +188,7 @@ int balancecells;
 int cellspresent = 0;
 
 //Debugging modes//////////////////
-int debug = 1;
+int debug = 1; //scrolling debug
 int inputcheck = 0; //read digital inputs
 int outputcheck = 0; //check outputs
 int candebug = 0; //view can frames
@@ -270,11 +273,21 @@ void loadSettings()
 }
 
 
+
+////Variables for canbus transmit soft buffer////
+int sendCnt = 0;
+int sendbufsize = 10;
+///
+
 CAN_message_t msg;
+CAN_message_t msgbuf[10];
 CAN_message_t inMsg;
 CAN_filter_t filter;
 
+
 uint32_t lastUpdate;
+
+
 
 
 void setup()
@@ -388,6 +401,9 @@ void setup()
   lastUpdate = 0;
 
   digitalWrite(led, HIGH);
+
+  myTimer.begin(Can0callback, 10000); //cally every x ms
+
   bms.setPstrings(settings.Pstrings);
   bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt, settings.TempConv, settings.TempOff);
 
@@ -781,10 +797,10 @@ void loop()
           digitalWrite(OUT1, LOW);//turn off discharge
           contctrl = 0; //turn off out 5 and 6
           /*
-                    if (digitalRead(IN3) == HIGH) //detect AC present for charging
-                    {
-                      bmsstatus = Charge;
-                    }
+            if (digitalRead(IN3) == HIGH) //detect AC present for charging
+            {
+            bmsstatus = Charge;
+            }
           */
           if (digitalRead(IN1) == LOW)//Key OFF
           {
@@ -1421,16 +1437,16 @@ void getcurrent()
   /*
     if (debugAvgCur != 0)
     {
-      SERIALCONSOLE.println();
-      SERIALCONSOLE.print(millis());
-      SERIALCONSOLE.print(" ");
-      SERIALCONSOLE.print(currentact);
-      SERIALCONSOLE.print(" ");
-      SERIALCONSOLE.print(AverageCurrent);
-      SERIALCONSOLE.print(" ");
-      SERIALCONSOLE.print(AverageCurrentSec);
-      SERIALCONSOLE.print(" ");
-      SERIALCONSOLE.print(AverageCurrentMin);
+    SERIALCONSOLE.println();
+    SERIALCONSOLE.print(millis());
+    SERIALCONSOLE.print(" ");
+    SERIALCONSOLE.print(currentact);
+    SERIALCONSOLE.print(" ");
+    SERIALCONSOLE.print(AverageCurrent);
+    SERIALCONSOLE.print(" ");
+    SERIALCONSOLE.print(AverageCurrentSec);
+    SERIALCONSOLE.print(" ");
+    SERIALCONSOLE.print(AverageCurrentMin);
     }
   */
   /*
@@ -1439,36 +1455,36 @@ void getcurrent()
     RunningAverageBuffer[NextRunningAverage] = currentact;
     if (debugCur != 0)
     {
-      SERIALCONSOLE.print(" | ");
-      SERIALCONSOLE.print(AverageCurrentTotal);
-      SERIALCONSOLE.print(" | ");
-      SERIALCONSOLE.print(RunningAverageBuffer[NextRunningAverage]);
-      SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(AverageCurrentTotal);
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(RunningAverageBuffer[NextRunningAverage]);
+    SERIALCONSOLE.print(" | ");
     }
     AverageCurrentTotal = AverageCurrentTotal + RunningAverageBuffer[NextRunningAverage];
     if (debugCur != 0)
     {
-      SERIALCONSOLE.print(" | ");
-      SERIALCONSOLE.print(AverageCurrentTotal);
-      SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(AverageCurrentTotal);
+    SERIALCONSOLE.print(" | ");
     }
 
     NextRunningAverage = NextRunningAverage + 1;
 
     if (NextRunningAverage > RunningAverageCount)
     {
-      NextRunningAverage = 0;
+    NextRunningAverage = 0;
     }
 
     AverageCurrent = AverageCurrentTotal / (RunningAverageCount + 1);
 
     if (debugCur != 0)
     {
-      SERIALCONSOLE.print(AverageCurrent);
-      SERIALCONSOLE.print(" | ");
-      SERIALCONSOLE.print(AverageCurrentTotal);
-      SERIALCONSOLE.print(" | ");
-      SERIALCONSOLE.print(NextRunningAverage);
+    SERIALCONSOLE.print(AverageCurrent);
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(AverageCurrentTotal);
+    SERIALCONSOLE.print(" | ");
+    SERIALCONSOLE.print(NextRunningAverage);
     }
   */
 
@@ -1676,12 +1692,12 @@ void contcon()
       }
     }
     /*
-       SERIALCONSOLE.print(conttimer);
-       SERIALCONSOLE.print("  ");
-       SERIALCONSOLE.print(contctrl);
-       SERIALCONSOLE.print("  ");
-       SERIALCONSOLE.print(contstat);
-       SERIALCONSOLE.println("  ");
+      SERIALCONSOLE.print(conttimer);
+      SERIALCONSOLE.print("  ");
+      SERIALCONSOLE.print(contctrl);
+      SERIALCONSOLE.print("  ");
+      SERIALCONSOLE.print(contstat);
+      SERIALCONSOLE.println("  ");
     */
 
   }
@@ -1748,7 +1764,13 @@ void VEcan() //communication with Victron system over CAN
     msg.buf[5] = highByte(discurrent);
     msg.buf[6] = lowByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
     msg.buf[7] = highByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
-    Can0.write(msg);
+
+      if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
+  
   }
 
   msg.id  = 0x355;
@@ -1761,7 +1783,12 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[5] = highByte(SOC * 10);
   msg.buf[6] = 0;
   msg.buf[7] = 0;
-  Can0.write(msg);
+
+  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
 
   msg.id  = 0x356;
   msg.len = 8;
@@ -1773,9 +1800,14 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[5] = highByte(int16_t(bms.getAvgTemperature() * 10));
   msg.buf[6] = 0;
   msg.buf[7] = 0;
-  Can0.write(msg);
 
-  delay(2);
+  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
+
+  //delay(2);
   msg.id  = 0x35A;
   msg.len = 8;
   msg.buf[0] = alarm[0];//High temp  Low Voltage | High Voltage
@@ -1786,7 +1818,12 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[5] = warning[1];// High Discharge Current | Low Temperature
   msg.buf[6] = warning[2];//Internal Failure | High Charge current
   msg.buf[7] = warning[3];// Cell Imbalance
-  Can0.write(msg);
+
+  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
 
   msg.id  = 0x35E;
   msg.len = 8;
@@ -1798,9 +1835,14 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[5] = bmsname[5];
   msg.buf[6] = bmsname[6];
   msg.buf[7] = bmsname[7];
-  Can0.write(msg);
 
-  delay(2);
+  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
+
+  //delay(2);
   msg.id  = 0x370;
   msg.len = 8;
   msg.buf[0] = bmsmanu[0];
@@ -1811,7 +1853,13 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[5] = bmsmanu[5];
   msg.buf[6] = bmsmanu[6];
   msg.buf[7] = bmsmanu[7];
-  Can0.write(msg);
+
+
+  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
 
   if (balancecells == 1)
   {
@@ -1835,11 +1883,18 @@ void VEcan() //communication with Victron system over CAN
       msg.buf[5] =  0x00;
       msg.buf[6] =  0x00;
       msg.buf[7] = 0x00;
-      Can0.write(msg);
+
+
+  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
+
     }
   }
 
-  delay(2);
+  // delay(2);
   msg.id  = 0x373;
   msg.len = 8;
   msg.buf[0] = lowByte(uint16_t(bms.getLowCellVolt() * 1000));
@@ -1850,15 +1905,21 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[5] = highByte(uint16_t(bms.getLowTemperature() + 273.15));
   msg.buf[6] = lowByte(uint16_t(bms.getHighTemperature() + 273.15));
   msg.buf[7] = highByte(uint16_t(bms.getHighTemperature() + 273.15));
-  Can0.write(msg);
 
-  delay(2);
+
+  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
+
+  //delay(2);
   msg.id  = 0x379; //Installed capacity
   msg.len = 2;
   msg.buf[0] = lowByte(uint16_t(settings.Pstrings * settings.CAP));
   msg.buf[1] = highByte(uint16_t(settings.Pstrings * settings.CAP));
   /*
-      delay(2);
+    delay(2);
     msg.id  = 0x378; //Installed capacity
     msg.len = 2;
     //energy in 100wh/unit
@@ -1872,7 +1933,8 @@ void VEcan() //communication with Victron system over CAN
     msg.buf[6] =
     msg.buf[7] =
   */
-  delay(2);
+
+  //delay(2);
   msg.id  = 0x372;
   msg.len = 8;
   msg.buf[0] = lowByte(bms.getNumModules());
@@ -1883,8 +1945,13 @@ void VEcan() //communication with Victron system over CAN
   msg.buf[5] = 0x00;
   msg.buf[6] = 0x00;
   msg.buf[7] = 0x00;
-  Can0.write(msg);
 
+
+  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+  {
+    msgbuf[sendCnt] = msg;
+    sendCnt++;
+  }
 }
 
 // Settings menu
@@ -2087,17 +2154,17 @@ void menu()
         /*
           if (settings.cursens == Analoguedual)
           {
-            settings.cursens = Canbus;
-            SERIALCONSOLE.println("  ");
-            SERIALCONSOLE.print(" CANbus Current Sensor ");
-            SERIALCONSOLE.println("  ");
+          settings.cursens = Canbus;
+          SERIALCONSOLE.println("  ");
+          SERIALCONSOLE.print(" CANbus Current Sensor ");
+          SERIALCONSOLE.println("  ");
           }
           else
           {
-            settings.cursens = Analoguedual;
-            SERIALCONSOLE.println("  ");
-            SERIALCONSOLE.print(" Analogue Current Sensor ");
-            SERIALCONSOLE.println("  ");
+          settings.cursens = Analoguedual;
+          SERIALCONSOLE.println("  ");
+          SERIALCONSOLE.print(" Analogue Current Sensor ");
+          SERIALCONSOLE.println("  ");
           }
         */
         menuload = 1;
@@ -3372,8 +3439,8 @@ void pwmcomms()
   analogWrite(OUT7, p);
   /*
     Serial.println();
-      Serial.print(p*100/255);
-      Serial.print(" OUT8 ");
+    Serial.print(p*100/255);
+    Serial.print(" OUT8 ");
   */
 
   if (bms.getLowCellVolt() < settings.UnderVSetpoint)
@@ -3386,9 +3453,9 @@ void pwmcomms()
     analogWrite(OUT8, p); //2V to 10V converter 1.5-10V
   }
   /*
-      Serial.println();
-      Serial.print(p);
-      Serial.print(" OUT7 ");
+    Serial.println();
+    Serial.print(p);
+    Serial.print(" OUT7 ");
   */
 }
 
@@ -3514,7 +3581,11 @@ void chargercomms()
     msg.buf[6] = 0x00;
     msg.buf[7] = 0x00;
 
-    Can0.write(msg);
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
     msg.ext = 0;
   }
 
@@ -3530,7 +3601,11 @@ void chargercomms()
     msg.buf[5] = lowByte(chargecurrent / ncharger);
     msg.buf[6] = highByte(chargecurrent / ncharger);
 
-    Can0.write(msg);
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
   }
   if (settings.chargertype == BrusaNLG5)
   {
@@ -3563,7 +3638,12 @@ void chargercomms()
     msg.buf[6] = lowByte(chargecurrent / ncharger);
     msg.buf[3] = highByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells ) - chargerendbulk) * 10));
     msg.buf[4] = lowByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells ) - chargerendbulk)  * 10));
-    Can0.write(msg);
+
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
 
     delay(2);
 
@@ -3584,14 +3664,25 @@ void chargercomms()
     msg.buf[4] = lowByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells ) - chargerend) * 10));
     msg.buf[5] = highByte(chargecurrent / ncharger);
     msg.buf[6] = lowByte(chargecurrent / ncharger);
-    Can0.write(msg);
+
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
+
   }
   if (settings.chargertype == ChevyVolt)
   {
     msg.id  = 0x30E;
     msg.len = 1;
     msg.buf[0] = 0x02; //only HV charging , 0x03 hv and 12V charging
-    Can0.write(msg);
+
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
 
     msg.id  = 0x304;
     msg.len = 4;
@@ -3614,7 +3705,12 @@ void chargercomms()
       msg.buf[2] = highByte( 400);
       msg.buf[3] = lowByte( 400);
     }
-    Can0.write(msg);
+
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
   }
 
   if (settings.chargertype == Coda)
@@ -3645,7 +3741,12 @@ void chargercomms()
       msg.buf[6] = 0x96;
     }
     msg.buf[7] = 0x01; //HV charging
-    Can0.write(msg);
+
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
   }
 
   if (settings.chargertype == EltekPC)
@@ -3668,7 +3769,12 @@ void chargercomms()
       msg.buf[i] = ChargerSerial[i];
     }
     msg.buf[6] = 0x01;
-    Can0.write(msg);
+
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
 
     msg.id  = 0x352;
     msg.len = 6;
@@ -3678,7 +3784,11 @@ void chargercomms()
     msg.buf[3] = lowByte(powerout);
     msg.buf[4] = highByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
     msg.buf[5] = lowByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
-    Can0.write(msg);
+
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)   {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
   }
 }
 
@@ -3700,4 +3810,26 @@ void SerialCanRecieve()
     Serial.println();
   }
 }
+
+void Can0callback() //run periodically to check if no can bus message is present in soft buffer
+{
+  /*
+  digitalWriteFast(LED_BUILTIN, !digitalReadFast(LED_BUILTIN));
+  Serial.println();
+  Serial.print("In Callback | ");
+  Serial.print(sendCnt);
+  */
+  if (sendCnt > 0)
+  {
+    if (Can0.write(msgbuf[0]) != 0)
+    {
+      for (int y = 0; y < 9; y++)
+      {
+        msgbuf[y] = msgbuf[y + 1];
+      }
+      sendCnt --;
+    }
+  }
+}
+
 ///END/////////
