@@ -46,7 +46,7 @@ EEPROMSettings settings;
 IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 210116;
+int firmver = 210118;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -1765,12 +1765,12 @@ void VEcan() //communication with Victron system over CAN
     msg.buf[6] = lowByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
     msg.buf[7] = highByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
 
-      if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
-  {
-    msgbuf[sendCnt] = msg;
-    sendCnt++;
-  }
-  
+    if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+    {
+      msgbuf[sendCnt] = msg;
+      sendCnt++;
+    }
+
   }
 
   msg.id  = 0x355;
@@ -1885,11 +1885,11 @@ void VEcan() //communication with Victron system over CAN
       msg.buf[7] = 0x00;
 
 
-  if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
-  {
-    msgbuf[sendCnt] = msg;
-    sendCnt++;
-  }
+      if (Can0.write(msg) == 0 && sendCnt < sendbufsize)
+      {
+        msgbuf[sendCnt] = msg;
+        sendCnt++;
+      }
 
     }
   }
@@ -2399,6 +2399,10 @@ void menu()
         if (Serial.available() > 0)
         {
           settings.ChargeTSetpoint = Serial.parseInt();
+          if (settings.ChargeTSetpoint < settings.UnderTSetpoint)
+          {
+            settings.ChargeTSetpoint = settings.UnderTSetpoint;
+          }
           menuload = 1;
           incomingByte = 'e';
         }
@@ -2407,6 +2411,10 @@ void menu()
         if (Serial.available() > 0)
         {
           settings.chargecurrentcold = Serial.parseInt() * 10;
+          if (settings.chargecurrentcold > settings.chargecurrentmax)
+          {
+            settings.chargecurrentcold = settings.chargecurrentmax;
+          }
           menuload = 1;
           incomingByte = 'e';
         }
@@ -2537,6 +2545,7 @@ void menu()
           menuload = 1;
           incomingByte = 'b';
         }
+        break;
 
       case 'h':
         if (Serial.available() > 0)
@@ -2546,14 +2555,8 @@ void menu()
           menuload = 1;
           incomingByte = 'b';
         }
+        break;
 
-      case 'j':
-        if (Serial.available() > 0)
-        {
-          settings.DisTSetpoint = Serial.parseInt();
-          menuload = 1;
-          incomingByte = 'b';
-        }
 
       case 'b':
         if (Serial.available() > 0)
@@ -2698,6 +2701,14 @@ void menu()
         }
         break;
 
+      case 'j':
+        if (Serial.available() > 0)
+        {
+          settings.DisTSetpoint = Serial.parseInt();
+          menuload = 1;
+          incomingByte = 'b';
+        }
+        break;
     }
   }
 
@@ -3315,12 +3326,14 @@ void currentlimit()
     }
 
     //Modifying Charge current///
-    if (chargecurrent > 0)
+    if (chargecurrent > settings.chargecurrentcold)
     {
       //Temperature based///
       if (bms.getLowTemperature() < settings.ChargeTSetpoint)
       {
-        chargecurrent = chargecurrent - map(bms.getLowTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, settings.chargecurrentmax, settings.chargecurrentcold);
+
+        chargecurrent = chargecurrent - map(bms.getLowTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, (settings.chargecurrentmax - settings.chargecurrentcold), 0);
+
       }
       //Voltagee based///
       if (storagemode == 1)
@@ -3814,10 +3827,10 @@ void SerialCanRecieve()
 void Can0callback() //run periodically to check if no can bus message is present in soft buffer
 {
   /*
-  digitalWriteFast(LED_BUILTIN, !digitalReadFast(LED_BUILTIN));
-  Serial.println();
-  Serial.print("In Callback | ");
-  Serial.print(sendCnt);
+    digitalWriteFast(LED_BUILTIN, !digitalReadFast(LED_BUILTIN));
+    Serial.println();
+    Serial.print("In Callback | ");
+    Serial.print(sendCnt);
   */
   if (sendCnt > 0)
   {
