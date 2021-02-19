@@ -46,7 +46,7 @@ EEPROMSettings settings;
 IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 210118;
+int firmver = 210219;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -99,7 +99,7 @@ byte bmsstatus = 0;
 
 
 int Discharge;
-int ErrorReason = 0;
+uint16_t ErrorReason = 0; //// bit wise error reasons
 
 //variables for output control
 int pulltime = 1000;
@@ -683,7 +683,10 @@ void loop()
 
           if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint && bms.getHighTemperature() < settings.OverTSetpoint && cellspresent == bms.seriescells() && cellspresent == (settings.Scells * settings.Pstrings))
           {
-            bmsstatus = Boot;
+            if (ErrorReason & 0x0C == 0)
+            {
+              bmsstatus = Boot;
+            }
           }
         }
       }
@@ -838,7 +841,11 @@ void loop()
           SERIALCONSOLE.print(bms.getLowCellVolt());
           SERIALCONSOLE.println("  ");
           bmsstatus = Error;
-          ErrorReason = 1;
+          ErrorReason = ErrorReason & 0x01;
+        }
+        else
+        {
+          ErrorReason = ErrorReason & ~0x01;
         }
       }
     }
@@ -851,24 +858,26 @@ void loop()
           if (UnderTime > millis()) //check is last time not undervoltage is longer thatn UnderDur ago
           {
             bmsstatus = Error;
-            ErrorReason = 2;
+            ErrorReason = ErrorReason | 0x01;
           }
         }
         else
         {
           UnderTime = millis() + settings.triptime;
+          ErrorReason = ErrorReason & ~0x01;
         }
         if (bms.getHighCellVolt() > settings.OverVSetpoint)
         {
           if (UnderTime > millis()) //check is last time not undervoltage is longer thatn UnderDur ago
           {
             bmsstatus = Error;
-            ErrorReason = 2;
+            ErrorReason = ErrorReason | 0x02;
           }
         }
         else
         {
           UnderTime = millis() + settings.triptime;
+          ErrorReason = ErrorReason & ~0x02;
         }
       }
     }
@@ -916,8 +925,12 @@ void loop()
             SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
             SERIALCONSOLE.println("  ");
             bmsstatus = Error;
-            ErrorReason = 3;
+            ErrorReason = ErrorReason | 0x04;
           }
+        }
+        else
+        {
+          ErrorReason = ErrorReason & ~0x04;
         }
       }
     }
@@ -948,6 +961,7 @@ void loop()
             bmsstatus = Boot;
             }
           */
+          ErrorReason = ErrorReason & ~0x08;
         }
         else
         {
@@ -959,7 +973,8 @@ void loop()
             SERIALCONSOLE.println("  ");
           }
           bmsstatus = Error;
-          ErrorReason = 4;
+          ErrorReason = 2;
+          ErrorReason = ErrorReason | 0x08;
         }
         bms.clearmodules();
       }
