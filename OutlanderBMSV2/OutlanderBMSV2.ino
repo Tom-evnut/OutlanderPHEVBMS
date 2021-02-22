@@ -46,7 +46,7 @@ EEPROMSettings settings;
 IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 210219;
+int firmver = 210222;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -433,7 +433,7 @@ void loop()
     contcon();
     if (settings.ESSmode == 1)
     {
-      if (bmsstatus != Error)
+      if (bmsstatus != Error && bmsstatus != Boot)
       {
         contctrl = contctrl | 4; //turn on negative contactor
 
@@ -685,7 +685,7 @@ void loop()
           {
             if (ErrorReason & 0x0C == 0)
             {
-              bmsstatus = Boot;
+              bmsstatus = Ready;
             }
           }
         }
@@ -822,6 +822,10 @@ void loop()
     if ( settings.cursens == Analoguedual || settings.cursens == Analoguesing)
     {
       getcurrent();
+    }
+    if (settings.cursens == 0)
+    {
+      currentact = 0;
     }
   }
 
@@ -1509,7 +1513,7 @@ void updateSOC()
 {
   if (SOCset == 0)
   {
-    if (millis() > 10000)
+    if (millis() > 5000)
     {
       SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
 
@@ -1519,6 +1523,10 @@ void updateSOC()
       {
         SERIALCONSOLE.println("  ");
         SERIALCONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
+      }
+      if(settings.ESSmode == 1)
+      {
+        bmsstatus = Ready;
       }
     }
   }
