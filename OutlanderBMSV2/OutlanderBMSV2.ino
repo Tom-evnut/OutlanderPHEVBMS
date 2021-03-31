@@ -46,7 +46,7 @@ EEPROMSettings settings;
 IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 210222;
+int firmver = 210331;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -1524,7 +1524,7 @@ void updateSOC()
         SERIALCONSOLE.println("  ");
         SERIALCONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
       }
-      if(settings.ESSmode == 1)
+      if (settings.ESSmode == 1)
       {
         bmsstatus = Ready;
       }
@@ -3190,6 +3190,10 @@ void canread()
   {
     switch (inMsg.id)
     {
+      case 0x3c1:
+        CAB500();
+        break;
+
       case 0x3c2:
         CAB300();
         break;
@@ -3283,6 +3287,41 @@ void CAB300()
     Serial.print("mA ");
   }
 }
+
+void CAB500()
+{
+  inbox = 0;
+  for (int i = 1; i < 4; i++)
+  {
+    inbox = (inbox << 8) | inMsg.buf[i];
+  }
+  CANmilliamps = inbox;
+  if (candebug == 1)
+  {
+    Serial.println();
+    Serial.print(CANmilliamps, HEX);
+  }
+  if (CANmilliamps > 0x800000)
+  {
+    CANmilliamps -= 0x800000;
+  }
+  else
+  {
+    CANmilliamps = (0x800000 - CANmilliamps) * -1;
+  }
+  if ( settings.cursens == Canbus)
+  {
+    RawCur = CANmilliamps;
+    getcurrent();
+  }
+  if (candebug == 1)
+  {
+    Serial.println();
+    Serial.print(CANmilliamps);
+    Serial.print("mA ");
+  }
+}
+
 
 void currentlimit()
 {
