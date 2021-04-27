@@ -46,7 +46,7 @@ EEPROMSettings settings;
 IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 240431;
+int firmver = 270431;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -648,6 +648,7 @@ void loop()
             if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
             {
               digitalWrite(OUT2, HIGH);//trip breaker
+              bmsstatus = Error;
             }
             else
             {
@@ -661,10 +662,10 @@ void loop()
               digitalWrite(OUT2, LOW);//turn off contactor
               contctrl = contctrl & 253; //turn off contactor
               digitalWrite(OUT4, LOW);//ensure precharge is low
+              bmsstatus = Error;
             }
           }
         }
-
       }
       else
       {
@@ -691,7 +692,7 @@ void loop()
 
           if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint && bms.getHighTemperature() < settings.OverTSetpoint && cellspresent == bms.seriescells() && cellspresent == (settings.Scells * settings.Pstrings))
           {
-            if (ErrorReason & 0x0C == 0)
+            if (ErrorReason == 0)
             {
               bmsstatus = Ready;
             }
@@ -1143,14 +1144,13 @@ void printbmsstat()
       }
       else
       {
-        SERIALCONSOLE.print(": Happy ");
+        //SERIALCONSOLE.print(": Happy ");
       }
     }
     else
     {
       if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint)
       {
-
         if ( bmsstatus == Error)
         {
           SERIALCONSOLE.print(": UNhappy:");
@@ -1538,6 +1538,7 @@ void updateSOC()
       }
     }
   }
+
   if (settings.voltsoc == 1 || settings.cursens == 0)
   {
     SOC = map(uint16_t(bms.getAvgCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
