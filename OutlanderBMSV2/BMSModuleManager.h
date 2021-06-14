@@ -68,6 +68,15 @@ class BMSModuleManager
     int tempsens;
     float tempconv;
     int tempoff;
+    float avgcell[8];
+     float avgtotal;
+    int avgindex;
+    float lowcell[8];
+    float lowtotal;
+    int lowindex;
+    float highcell[8];
+    float hightotal;
+    int highindex;
     /*
       void sendBatterySummary();
       void sendModuleSummary(int module);

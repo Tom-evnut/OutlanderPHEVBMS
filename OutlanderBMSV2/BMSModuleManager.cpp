@@ -16,6 +16,22 @@ BMSModuleManager::BMSModuleManager()
   lowestPackTemp = 200.0f;
   highestPackTemp = -100.0f;
   isFaulted = false;
+
+  //////////////smoothing of readings/////////////////////
+
+  avgindex = 0;
+  avgtotal = 0;
+  lowindex = 0;
+  lowtotal = 0;
+  hightotal = 0;
+  highindex = 0;
+  for (int y = 0; y < 8; y++)
+  {
+    avgcell[y] = 0;
+    lowcell[y] = 0;
+    highcell [y] = 0;
+  }
+
 }
 
 void BMSModuleManager::clearmodules()
@@ -141,6 +157,26 @@ float BMSModuleManager::getLowCellVolt()
       if (modules[x].getLowCellV() <  LowCellVolt)  LowCellVolt = modules[x].getLowCellV();
     }
   }
+
+  //////smoothing////////////////////
+
+  lowtotal = lowtotal - lowcell[lowindex];
+
+  lowcell[lowindex] = LowCellVolt;
+
+  lowtotal = lowtotal + LowCellVolt;
+
+  lowindex = lowindex + 1;
+
+  if (lowindex > 7)
+  {
+    lowindex = 0;
+  }
+
+  LowCellVolt = lowtotal / 8;
+
+  /////smoothing////////////////////
+
   return LowCellVolt;
 }
 
@@ -160,6 +196,27 @@ float BMSModuleManager::getHighCellVolt()
       if (modules[x].getHighCellV() >  HighCellVolt)  HighCellVolt = modules[x].getHighCellV();
     }
   }
+
+
+  //////smoothing////////////////////
+
+  hightotal = hightotal - highcell[highindex];
+
+  highcell[highindex] = HighCellVolt;
+
+  hightotal = hightotal + HighCellVolt;
+
+  highindex = highindex + 1;
+
+  if (highindex > 7)
+  {
+    highindex = 0;
+  }
+
+  HighCellVolt = hightotal / 8;
+
+  /////smoothing////////////////////
+
   return HighCellVolt;
 }
 
@@ -208,7 +265,7 @@ void BMSModuleManager::setSensors(int sensor, float Ignore, float tempconvin, in
 
 float BMSModuleManager::getAvgTemperature()
 {
-  
+
   float avg = 0.0f;
   lowTemp = 999.0f;
   highTemp = -999.0f;
@@ -273,6 +330,34 @@ float BMSModuleManager::getAvgCellVolt()
   }
   avg = avg / (float)numFoundModules;
 
+
+  //////smoothing////////////////////
+
+  if (avg > 0 && avg < 10)
+  {
+    // SERIALCONSOLE.println();
+    //SERIALCONSOLE.println(avg);
+    // SERIALCONSOLE.println(avgindex);
+    // SERIALCONSOLE.println(avgtotal);
+
+    avgtotal = avgtotal - avgcell[avgindex];
+
+    avgcell[avgindex] = avg;
+    //SERIALCONSOLE.println(avgcell[avgindex]);
+    avgtotal = avgtotal + avg;
+
+    avgindex = avgindex + 1;
+
+    if (avgindex > 7)
+    {
+      avgindex = 0;
+    }
+
+
+    avg = avgtotal / 8;
+
+    /////smoothing////////////////////
+  }
   return avg;
 }
 
