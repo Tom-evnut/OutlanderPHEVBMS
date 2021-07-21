@@ -110,6 +110,70 @@ void BMSModuleManager::decodecan(CAN_message_t &msg)
 
 void BMSModuleManager::getAllVoltTemp()
 {
+  /////smoothing Low////////////////////
+  lowtotal = lowtotal - lowcell[lowindex];
+
+  lowcell[lowindex] = LowCellVolt;
+
+  lowtotal = lowtotal + LowCellVolt;
+
+  lowindex = lowindex + 1;
+  /*
+    Serial.println();
+    Serial.print(lowindex);
+    Serial.print(" | ");
+    Serial.print(LowCellVolt);
+    Serial.print(" | ");
+    Serial.print(lowtotal);
+    Serial.print(" | ");
+  */
+  if (lowindex > 7)
+  {
+    lowindex = 0;
+  }
+
+  LowCellVoltsmooth = lowtotal / 8;
+  //Serial.print(LowCellVoltsmooth);
+
+  /////smoothing High////////////////////
+
+  hightotal = hightotal - highcell[highindex];
+
+  if ( LowCellVolt > HighCellVolt)
+  {
+    HighCellVolt = LowCellVolt;
+  }
+
+  highcell[highindex] = HighCellVolt;
+
+  hightotal = hightotal + HighCellVolt;
+
+  highindex = highindex + 1;
+
+  if (highindex > 7)
+  {
+    highindex = 0;
+  }
+
+  HighCellVoltsmooth = hightotal / 8;
+
+  /////smoothing////////////////////
+
+  if (avg > 0 && avg < 10)
+  {
+    avgtotal = avgtotal - avgcell[avgindex];
+    avgcell[avgindex] = avg;
+    avgtotal = avgtotal + avg;
+    avgindex = avgindex + 1;
+
+    if (avgindex > 7)
+    {
+      avgindex = 0;
+    }
+    avgsmooth = avgtotal / 8;
+  }
+  /////smoothing////////////////////
+
   packVolt = 0.0f;
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
@@ -159,25 +223,25 @@ float BMSModuleManager::getLowCellVolt()
   }
 
   //////smoothing////////////////////
+  /*
+    lowtotal = lowtotal - lowcell[lowindex];
 
-  lowtotal = lowtotal - lowcell[lowindex];
+    lowcell[lowindex] = LowCellVolt;
 
-  lowcell[lowindex] = LowCellVolt;
+    lowtotal = lowtotal + LowCellVolt;
 
-  lowtotal = lowtotal + LowCellVolt;
+    lowindex = lowindex + 1;
 
-  lowindex = lowindex + 1;
+    if (lowindex > 7)
+    {
+      lowindex = 0;
+    }
 
-  if (lowindex > 7)
-  {
-    lowindex = 0;
-  }
-
-  LowCellVolt = lowtotal / 8;
-
+    LowCellVolt = lowtotal / 8;
+  */
   /////smoothing////////////////////
 
-  return LowCellVolt;
+  return LowCellVoltsmooth;
 }
 
 float BMSModuleManager::getHighCellVolt()
@@ -199,25 +263,30 @@ float BMSModuleManager::getHighCellVolt()
 
 
   //////smoothing////////////////////
+  /*
+    hightotal = hightotal - highcell[highindex];
 
-  hightotal = hightotal - highcell[highindex];
+    if ( LowCellVolt > HighCellVolt)
+    {
+      HighCellVolt = LowCellVolt;
+    }
 
-  highcell[highindex] = HighCellVolt;
+    highcell[highindex] = HighCellVolt;
 
-  hightotal = hightotal + HighCellVolt;
+    hightotal = hightotal + HighCellVolt;
 
-  highindex = highindex + 1;
+    highindex = highindex + 1;
 
-  if (highindex > 7)
-  {
-    highindex = 0;
-  }
+    if (highindex > 7)
+    {
+      highindex = 0;
+    }
 
-  HighCellVolt = hightotal / 8;
-
+    HighCellVolt = hightotal / 8;
+  */
   /////smoothing////////////////////
 
-  return HighCellVolt;
+  return HighCellVoltsmooth;
 }
 
 float BMSModuleManager::getPackVoltage()
@@ -265,8 +334,7 @@ void BMSModuleManager::setSensors(int sensor, float Ignore, float tempconvin, in
 
 float BMSModuleManager::getAvgTemperature()
 {
-
-  float avg = 0.0f;
+  float avgtemp = 0.0f;
   lowTemp = 999.0f;
   highTemp = -999.0f;
   int y = 0; //counter for modules below -70 (no sensors connected)
@@ -278,7 +346,7 @@ float BMSModuleManager::getAvgTemperature()
       numFoundModules++;
       if (modules[x].getAvgTemp() > -70)
       {
-        avg += modules[x].getAvgTemp();
+        avgtemp += modules[x].getAvgTemp();
         if (modules[x].getHighTemp() > highTemp)
         {
           highTemp = modules[x].getHighTemp();
@@ -294,14 +362,14 @@ float BMSModuleManager::getAvgTemperature()
       }
     }
   }
-  avg = avg / (float)(numFoundModules - y);
+  avgtemp = avgtemp / (float)(numFoundModules - y);
 
   if (numFoundModules != numFoundModulesOLD)
   {
     numFoundModulesOLD = numFoundModules;
     setSensors(tempsens, ignorevolt, tempconv, tempoff);
   }
-  return avg;
+  return avgtemp;
 }
 
 float BMSModuleManager::getHighTemperature()
@@ -323,7 +391,7 @@ float BMSModuleManager::getLowTemperature()
 
 float BMSModuleManager::getAvgCellVolt()
 {
-  float avg = 0.0f;
+  avg = 0.0f;
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting()) avg += modules[x].getAverageV();
@@ -332,33 +400,22 @@ float BMSModuleManager::getAvgCellVolt()
 
 
   //////smoothing////////////////////
-
-  if (avg > 0 && avg < 10)
-  {
-    // SERIALCONSOLE.println();
-    //SERIALCONSOLE.println(avg);
-    // SERIALCONSOLE.println(avgindex);
-    // SERIALCONSOLE.println(avgtotal);
-
-    avgtotal = avgtotal - avgcell[avgindex];
-
-    avgcell[avgindex] = avg;
-    //SERIALCONSOLE.println(avgcell[avgindex]);
-    avgtotal = avgtotal + avg;
-
-    avgindex = avgindex + 1;
-
-    if (avgindex > 7)
+  /*
+    if (avg > 0 && avg < 10)
     {
-      avgindex = 0;
-    }
+      avgtotal = avgtotal - avgcell[avgindex];
+      avgcell[avgindex] = avg;
+      avgtotal = avgtotal + avg;
+      avgindex = avgindex + 1;
 
-
-    avg = avgtotal / 8;
-
-    /////smoothing////////////////////
-  }
-  return avg;
+      if (avgindex > 7)
+      {
+        avgindex = 0;
+      }
+      avg = avgtotal / 8;
+  */
+  /////smoothing////////////////////
+  return avgsmooth;
 }
 
 void BMSModuleManager::printPackSummary()
@@ -487,7 +544,7 @@ void BMSModuleManager::printPackDetails(int digits, bool showbal)
   Logger::console("");
   Logger::console("");
   Logger::console("Modules: %i Cells: %i Strings: %i  Voltage: %fV   Avg Cell Voltage: %fV  Low Cell Voltage: %fV   High Cell Voltage: %fV Delta Voltage: %zmV   Avg Temp: %fC ", numFoundModules, seriescells(),
-                  Pstring, getPackVoltage(), getAvgCellVolt(), LowCellVolt, HighCellVolt, (HighCellVolt - LowCellVolt) * 1000, getAvgTemperature());
+                  Pstring, getPackVoltage(), getAvgCellVolt(), LowCellVoltsmooth, HighCellVoltsmooth, (HighCellVolt - LowCellVolt) * 1000, getAvgTemperature());
   Logger::console("");
   for (int y = 1; y < 63; y++)
   {

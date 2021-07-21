@@ -50,8 +50,12 @@ class BMSModuleManager
   private:
     float packVolt;                         // All modules added together
     int Pstring;
+    float avg;
+    float avgsmooth;
     float LowCellVolt;
+    float LowCellVoltsmooth;
     float HighCellVolt;
+    float HighCellVoltsmooth;
     float lowestPackVolt;
     float highestPackVolt;
     float lowestPackTemp;
