@@ -118,7 +118,7 @@ void BMSModuleManager::getAllVoltTemp()
   lowtotal = lowtotal + LowCellVolt;
 
   lowindex = lowindex + 1;
-  
+  /*
     Serial.println();
     Serial.print("Low | ");
     Serial.print(lowindex);
@@ -127,14 +127,14 @@ void BMSModuleManager::getAllVoltTemp()
     Serial.print(" | ");
     Serial.print(lowtotal);
     Serial.print(" | ");
- 
+ */
   if (lowindex > 7)
   {
     lowindex = 0;
   }
 
   LowCellVoltsmooth = lowtotal / 8;
-  Serial.print(LowCellVoltsmooth);
+ // Serial.print(LowCellVoltsmooth);
 
   /////smoothing High////////////////////
 
@@ -150,6 +150,7 @@ void BMSModuleManager::getAllVoltTemp()
   hightotal = hightotal + HighCellVolt;
 
   highindex = highindex + 1;
+  /*
     Serial.println();
     Serial.print("High | ");
     Serial.print(highindex);
@@ -158,6 +159,7 @@ void BMSModuleManager::getAllVoltTemp()
     Serial.print(" | ");
     Serial.print(hightotal);
     Serial.print(" | ");
+    */
   if (highindex > 7)
   {
     highindex = 0;
@@ -165,7 +167,7 @@ void BMSModuleManager::getAllVoltTemp()
 
   HighCellVoltsmooth = hightotal / 8;
   
-    Serial.print(HighCellVoltsmooth);
+   // Serial.print(HighCellVoltsmooth);
 
   /////smoothing////////////////////
 

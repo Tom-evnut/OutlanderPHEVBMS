@@ -1,5 +1,4 @@
-#pragma once
-#include "config.h"
+#include  "config.h"
 #include "BMSModule.h"
 #include <FlexCAN.h>
 
