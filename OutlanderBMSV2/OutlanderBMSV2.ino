@@ -26,7 +26,7 @@
 #include "Logger.h"
 #include <ADC.h> //https://github.com/pedvide/ADC
 #include <EEPROM.h>
-#include <FlexCAN.h> https://github.com/collin80/FlexCAN_Library
+#include <FlexCAN.h> //https://github.com/collin80/FlexCAN_Library
 #include <SPI.h>
 #include <Filters.h>//https://github.com/JonHub/Filters
 #include "Serial_CAN_Module_TeensyS3.h" //https://github.com/tomdebree/Serial_CAN_Teensy
@@ -46,7 +46,7 @@ EEPROMSettings settings;
 IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 210805;
+int firmver = 211001;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -294,9 +294,6 @@ CAN_filter_t filter;
 
 
 uint32_t lastUpdate;
-
-void Can0callback();
-void inputdebug();
 
 void setup()
 {
@@ -3234,7 +3231,7 @@ void canread()
       switch (inMsg.id)
       {
         case 0x521: //
-          CANmilliamps = inMsg.rxBuf[5] + (inMsg.rxBuf[4] << 8) + (inMsg.rxBuf[3] << 16) + (inMsg.rxBuf[2] << 24);
+          CANmilliamps = inMsg.buf[5] + (inMsg.buf[4] << 8) + (inMsg.buf[3] << 16) + (inMsg.buf[2] << 24);
           if ( settings.cursens == Canbus)
           {
             RawCur = CANmilliamps;
@@ -3242,10 +3239,10 @@ void canread()
           }
           break;
         case 0x522: //
-          voltage1 = inMsg.rxBuf[5] + (inMsg.rxBuf[4] << 8) + (inMsg.rxBuf[3] << 16) + (inMsg.rxBuf[2] << 24);
+          voltage1 = inMsg.buf[5] + (inMsg.buf[4] << 8) + (inMsg.buf[3] << 16) + (inMsg.buf[2] << 24);
           break;
         case 0x523: //
-          voltage2 = inMsg.rxBuf[5] + (inMsg.rxBuf[4] << 8) + (inMsg.rxBuf[3] << 16) + (inMsg.rxBuf[2] << 24);
+          voltage2 = inMsg.buf[5] + (inMsg.buf[4] << 8) + (inMsg.buf[3] << 16) + (inMsg.buf[2] << 24);
           break;
         default:
           break;
@@ -3259,40 +3256,42 @@ void canread()
       handleVictronLynx();
     }
   }
-}
-if (inMsg.id > 0x600 && inMsg.id < 0x800)//do mitsubishi magic if ids are ones identified to be modules
-{
-  bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
-}
-if (inMsg.id > 0x80000600 && inMsg.id < 0x80000800)//do mitsubishi magic if ids are ones identified to be modules
-{
-  bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
-}
-if (debug == 1)
-{
-  if (candebug == 1)
+
+  if (inMsg.id > 0x600 && inMsg.id < 0x800)//do mitsubishi magic if ids are ones identified to be modules
   {
-    Serial.print(millis());
-    if ((inMsg.id & 0x80000000) == 0x80000000)    // Determine if ID is standard (11 bits) or extended (29 bits)
-      sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (inMsg.id & 0x1FFFFFFF), inMsg.len);
-    else
-      sprintf(msgString, ",0x%.3lX,false,%1d", inMsg.id, inMsg.len);
-
-    Serial.print(msgString);
-
-    if ((inMsg.id & 0x40000000) == 0x40000000) {  // Determine if message is a remote request frame.
-      sprintf(msgString, " REMOTE REQUEST FRAME");
-      Serial.print(msgString);
-    } else {
-      for (byte i = 0; i < inMsg.len; i++) {
-        sprintf(msgString, ", 0x%.2X", inMsg.buf[i]);
-        Serial.print(msgString);
-      }
-    }
-
-    Serial.println();
+    bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
   }
-}
+
+  if (inMsg.id > 0x80000600 && inMsg.id < 0x80000800) //do mitsubishi magic if ids are ones identified to be modules
+  {
+    bms.decodecan(inMsg);//do mitsubishi magic if ids are ones identified to be modules
+  }
+
+  if (debug == 1)
+  {
+    if (candebug == 1)
+    {
+      Serial.print(millis());
+      if ((inMsg.id & 0x80000000) == 0x80000000)    // Determine if ID is standard (11 bits) or extended (29 bits)
+        sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (inMsg.id & 0x1FFFFFFF), inMsg.len);
+      else
+        sprintf(msgString, ",0x%.3lX,false,%1d", inMsg.id, inMsg.len);
+
+      Serial.print(msgString);
+
+      if ((inMsg.id & 0x40000000) == 0x40000000) {  // Determine if message is a remote request frame.
+        sprintf(msgString, " REMOTE REQUEST FRAME");
+        Serial.print(msgString);
+      } else {
+        for (byte i = 0; i < inMsg.len; i++) {
+          sprintf(msgString, ", 0x%.2X", inMsg.buf[i]);
+          Serial.print(msgString);
+        }
+      }
+
+      Serial.println();
+    }
+  }
 }
 
 void CAB300()
@@ -3969,5 +3968,3 @@ void handleVictronLynx()
     Serial.print("mA ");
   }
 }
-
-///END/////////
