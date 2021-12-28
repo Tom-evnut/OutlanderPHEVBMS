@@ -135,15 +135,15 @@ void BMSModuleManager::getAllVoltTemp()
     LowCellVoltsmooth = lowtotal / 8;
   */
 
-  if (abs(LowCellVoltsmooth - LowCellVolt) > 10)
+  if (abs(LowCellVoltsmooth - LowCellVolt) > 0.01)
   {
     if (LowCellVoltsmooth > LowCellVolt)
     {
-      LowCellVoltsmooth = LowCellVoltsmooth - 10;
+      LowCellVoltsmooth = LowCellVoltsmooth - 0.01;
     }
     else
     {
-      LowCellVoltsmooth = LowCellVoltsmooth + 10;
+      LowCellVoltsmooth = LowCellVoltsmooth + 0.01;
     }
   }
   else
@@ -155,47 +155,47 @@ void BMSModuleManager::getAllVoltTemp()
   // Serial.print(LowCellVoltsmooth);
 
   /////smoothing High////////////////////
-/*
-  hightotal = hightotal - highcell[highindex];
-
-  if ( LowCellVolt > HighCellVolt)
-  {
-    HighCellVolt = LowCellVolt;
-  }
-
-  highcell[highindex] = HighCellVolt;
-
-  hightotal = hightotal + HighCellVolt;
-
-  highindex = highindex + 1;
   /*
-    Serial.println();
-    Serial.print("High | ");
-    Serial.print(highindex);
-    Serial.print(" | ");
-    Serial.print(HighCellVolt);
-    Serial.print(" | ");
-    Serial.print(hightotal);
-    Serial.print(" | ");
-  
-  if (highindex > 7)
-  {
-    highindex = 0;
-  }
+    hightotal = hightotal - highcell[highindex];
 
-  HighCellVoltsmooth = hightotal / 8;
-*/
+    if ( LowCellVolt > HighCellVolt)
+    {
+      HighCellVolt = LowCellVolt;
+    }
+
+    highcell[highindex] = HighCellVolt;
+
+    hightotal = hightotal + HighCellVolt;
+
+    highindex = highindex + 1;
+    /*
+      Serial.println();
+      Serial.print("High | ");
+      Serial.print(highindex);
+      Serial.print(" | ");
+      Serial.print(HighCellVolt);
+      Serial.print(" | ");
+      Serial.print(hightotal);
+      Serial.print(" | ");
+
+    if (highindex > 7)
+    {
+      highindex = 0;
+    }
+
+    HighCellVoltsmooth = hightotal / 8;
+  */
   // Serial.print(HighCellVoltsmooth);
 
-  if (abs(HighCellVoltsmooth - HighCellVolt) > 10)
+  if (abs(HighCellVoltsmooth - HighCellVolt) > 0.01)
   {
     if (HighCellVoltsmooth > HighCellVolt)
     {
-      HighCellVoltsmooth = HighCellVoltsmooth - 10;
+      HighCellVoltsmooth = HighCellVoltsmooth - 0.01;
     }
     else
     {
-      HighCellVoltsmooth = HighCellVoltsmooth + 10;
+      HighCellVoltsmooth = HighCellVoltsmooth + 0.01;
     }
   }
   else
