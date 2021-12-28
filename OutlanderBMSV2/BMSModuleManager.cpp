@@ -111,14 +111,14 @@ void BMSModuleManager::decodecan(CAN_message_t &msg)
 void BMSModuleManager::getAllVoltTemp()
 {
   /////smoothing Low////////////////////
-  lowtotal = lowtotal - lowcell[lowindex];
 
-  lowcell[lowindex] = LowCellVolt;
+  /*lowtotal = lowtotal - lowcell[lowindex];
 
-  lowtotal = lowtotal + LowCellVolt;
+    lowcell[lowindex] = LowCellVolt;
 
-  lowindex = lowindex + 1;
-  /*
+    lowtotal = lowtotal + LowCellVolt;
+
+    lowindex = lowindex + 1;
     Serial.println();
     Serial.print("Low | ");
     Serial.print(lowindex);
@@ -127,17 +127,35 @@ void BMSModuleManager::getAllVoltTemp()
     Serial.print(" | ");
     Serial.print(lowtotal);
     Serial.print(" | ");
- */
-  if (lowindex > 7)
-  {
+    if (lowindex > 7)
+    {
     lowindex = 0;
+    }
+
+    LowCellVoltsmooth = lowtotal / 8;
+  */
+
+  if (abs(LowCellVoltsmooth - LowCellVolt) > 10)
+  {
+    if (LowCellVoltsmooth > LowCellVolt)
+    {
+      LowCellVoltsmooth = LowCellVoltsmooth - 10;
+    }
+    else
+    {
+      LowCellVoltsmooth = LowCellVoltsmooth + 10;
+    }
+  }
+  else
+  {
+    LowCellVoltsmooth = LowCellVolt;
   }
 
-  LowCellVoltsmooth = lowtotal / 8;
- // Serial.print(LowCellVoltsmooth);
+
+  // Serial.print(LowCellVoltsmooth);
 
   /////smoothing High////////////////////
-
+/*
   hightotal = hightotal - highcell[highindex];
 
   if ( LowCellVolt > HighCellVolt)
@@ -159,15 +177,31 @@ void BMSModuleManager::getAllVoltTemp()
     Serial.print(" | ");
     Serial.print(hightotal);
     Serial.print(" | ");
-    */
+  
   if (highindex > 7)
   {
     highindex = 0;
   }
 
   HighCellVoltsmooth = hightotal / 8;
-  
-   // Serial.print(HighCellVoltsmooth);
+*/
+  // Serial.print(HighCellVoltsmooth);
+
+  if (abs(HighCellVoltsmooth - HighCellVolt) > 10)
+  {
+    if (HighCellVoltsmooth > HighCellVolt)
+    {
+      HighCellVoltsmooth = HighCellVoltsmooth - 10;
+    }
+    else
+    {
+      HighCellVoltsmooth = HighCellVoltsmooth + 10;
+    }
+  }
+  else
+  {
+    HighCellVoltsmooth = HighCellVolt;
+  }
 
   /////smoothing////////////////////
 
