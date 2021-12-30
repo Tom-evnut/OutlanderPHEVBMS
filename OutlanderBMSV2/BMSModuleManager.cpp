@@ -140,6 +140,13 @@ void BMSModuleManager::getAllVoltTemp()
     LowCellVoltsmooth = lowtotal / 8;
   */
 
+  //initalize on start up//
+  if (HighCellVoltsmooth == 0 && LowCellVoltsmooth == 0)
+  {
+    HighCellVoltsmooth = HighCellVolt;
+    LowCellVoltsmooth = LowCellVolt;
+  }
+
   if (abs(LowCellVoltsmooth - LowCellVolt) > MeasurementStep)
   {
     if (LowCellVoltsmooth > LowCellVolt)
