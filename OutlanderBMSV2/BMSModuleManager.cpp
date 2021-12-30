@@ -19,6 +19,11 @@ BMSModuleManager::BMSModuleManager()
 
   //////////////smoothing of readings/////////////////////
 
+  LowCellVoltsmooth = 0;
+  HighCellVoltsmooth = 0;
+  MeasurementStep = 0.001;
+
+
   avgindex = 0;
   avgtotal = 0;
   lowindex = 0;
@@ -135,15 +140,15 @@ void BMSModuleManager::getAllVoltTemp()
     LowCellVoltsmooth = lowtotal / 8;
   */
 
-  if (abs(LowCellVoltsmooth - LowCellVolt) > 0.01)
+  if (abs(LowCellVoltsmooth - LowCellVolt) > MeasurementStep)
   {
     if (LowCellVoltsmooth > LowCellVolt)
     {
-      LowCellVoltsmooth = LowCellVoltsmooth - 0.01;
+      LowCellVoltsmooth = LowCellVoltsmooth - MeasurementStep;
     }
     else
     {
-      LowCellVoltsmooth = LowCellVoltsmooth + 0.01;
+      LowCellVoltsmooth = LowCellVoltsmooth + MeasurementStep;
     }
   }
   else
@@ -187,15 +192,15 @@ void BMSModuleManager::getAllVoltTemp()
   */
   // Serial.print(HighCellVoltsmooth);
 
-  if (abs(HighCellVoltsmooth - HighCellVolt) > 0.01)
+  if (abs(HighCellVoltsmooth - HighCellVolt) > MeasurementStep)
   {
     if (HighCellVoltsmooth > HighCellVolt)
     {
-      HighCellVoltsmooth = HighCellVoltsmooth - 0.01;
+      HighCellVoltsmooth = HighCellVoltsmooth - MeasurementStep;
     }
     else
     {
-      HighCellVoltsmooth = HighCellVoltsmooth + 0.01;
+      HighCellVoltsmooth = HighCellVoltsmooth + MeasurementStep;
     }
   }
   else

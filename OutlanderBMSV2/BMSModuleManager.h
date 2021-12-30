@@ -55,6 +55,7 @@ class BMSModuleManager
     float LowCellVoltsmooth;
     float HighCellVolt;
     float HighCellVoltsmooth;
+    float MeasurementStep;
     float lowestPackVolt;
     float highestPackVolt;
     float lowestPackTemp;
