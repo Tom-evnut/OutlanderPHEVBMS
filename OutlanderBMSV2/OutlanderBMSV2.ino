@@ -46,7 +46,7 @@ EEPROMSettings settings;
 IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 211230;
+int firmver = 220104;
 
 //Curent filter//
 float filterFrequency = 5.0 ;
@@ -118,6 +118,8 @@ uint16_t pwmfreq = 10000;//pwm frequency
 int pwmcurmax = 50;//Max current to be shown with pwm
 int pwmcurmid = 50;//Mid point for pwm dutycycle based on current
 int16_t pwmcurmin = 0;//DONOT fill in, calculated later based on other values
+
+bool OutputEnable = 0;
 
 //variables for VE driect bus comms
 char* myStrings[] = {"V", "14674", "I", "0", "CE", "-1", "SOC", "800", "TTG", "-1", "Alarm", "OFF", "Relay", "OFF", "AR", "0", "BMV", "600S", "FW", "212", "H1", "-3", "H2", "-3", "H3", "0", "H4", "0", "H5", "0", "H6", "-7", "H7", "13180", "H8", "14774", "H9", "137", "H10", "0", "H11", "0", "H12", "0"};
@@ -438,7 +440,22 @@ void loop()
     contcon();
     if (settings.ESSmode == 1)
     {
-      if (bmsstatus != Error && bmsstatus != Boot)
+      if (settings.ChargerDirect == 1)
+      {
+        OutputEnable = 1;
+      }
+      else
+      {
+        if (digitalRead(IN2) == HIGH)
+        {
+          OutputEnable = 1;
+        }
+        else
+        {
+          OutputEnable = 0;
+        }
+      }
+      if (bmsstatus != Error && bmsstatus != Boot && OutputEnable == 1)
       {
         contctrl = contctrl | 4; //turn on negative contactor
 
@@ -2511,6 +2528,20 @@ void menu()
         incomingByte = 'k';
         break;
 
+      case '7':
+        if ( settings.ChargerDirect == 1)
+        {
+          settings.ChargerDirect = 0;
+        }
+        else
+        {
+          settings.ChargerDirect = 1;
+        }
+        menuload = 1;
+        incomingByte = 'k';
+        break;
+
+
       case 113: //q to go back to main menu
         gaugedebug = 0;
         menuload = 0;
@@ -2939,6 +2970,17 @@ void menu()
           {
             SERIALCONSOLE.println( "Main Contactor and Precharge");
           }
+          SERIALCONSOLE.print("7 - External Battery Enable: ");
+          switch (settings.ChargerDirect)
+          {
+            case 0:
+              SERIALCONSOLE.print(" Enable In2");
+              break;
+            case 1:
+              SERIALCONSOLE.print("Auto Start");
+              break;
+          }
+          SERIALCONSOLE.println();
         }
         menuload = 5;
         break;
