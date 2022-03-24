@@ -24,6 +24,7 @@ BMSModule::BMSModule()
   reset = false;
   moduleAddress = 0;
   timeout = 30000; //milliseconds before comms timeout;
+  IgnoreCell = 2.0;
 }
 
 void BMSModule::clearmodule()
@@ -235,7 +236,13 @@ float BMSModule::getCellVoltage(int cell)
 float BMSModule::getLowCellV()
 {
   float lowVal = 10.0f;
-  for (int i = 0; i < 8; i++) if (cellVolt[i] < lowVal && cellVolt[i] > IgnoreCell) lowVal = cellVolt[i];
+  for (int i = 0; i < 8; i++)
+  {
+    if (cellVolt[i] < lowVal && cellVolt[i] > IgnoreCell)
+    {
+      lowVal = cellVolt[i];
+    }
+  }
   return lowVal;
 }
 
