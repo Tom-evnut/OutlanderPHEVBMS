@@ -115,31 +115,9 @@ void BMSModuleManager::decodecan(CAN_message_t &msg)
 
 void BMSModuleManager::getAllVoltTemp()
 {
+  getLowCellVolt();
+  getHighCellVolt();
   /////smoothing Low////////////////////
-
-  /*lowtotal = lowtotal - lowcell[lowindex];
-
-    lowcell[lowindex] = LowCellVolt;
-
-    lowtotal = lowtotal + LowCellVolt;
-
-    lowindex = lowindex + 1;
-    Serial.println();
-    Serial.print("Low | ");
-    Serial.print(lowindex);
-    Serial.print(" | ");
-    Serial.print(LowCellVolt);
-    Serial.print(" | ");
-    Serial.print(lowtotal);
-    Serial.print(" | ");
-    if (lowindex > 7)
-    {
-    lowindex = 0;
-    }
-
-    LowCellVoltsmooth = lowtotal / 8;
-  */
-
   //initalize on start up//
   if (HighCellVoltsmooth == 0 && LowCellVoltsmooth == 0)
   {
@@ -167,38 +145,7 @@ void BMSModuleManager::getAllVoltTemp()
   // Serial.print(LowCellVoltsmooth);
 
   /////smoothing High////////////////////
-  /*
-    hightotal = hightotal - highcell[highindex];
-
-    if ( LowCellVolt > HighCellVolt)
-    {
-      HighCellVolt = LowCellVolt;
-    }
-
-    highcell[highindex] = HighCellVolt;
-
-    hightotal = hightotal + HighCellVolt;
-
-    highindex = highindex + 1;
-    /*
-      Serial.println();
-      Serial.print("High | ");
-      Serial.print(highindex);
-      Serial.print(" | ");
-      Serial.print(HighCellVolt);
-      Serial.print(" | ");
-      Serial.print(hightotal);
-      Serial.print(" | ");
-
-    if (highindex > 7)
-    {
-      highindex = 0;
-    }
-
-    HighCellVoltsmooth = hightotal / 8;
-  */
-  // Serial.print(HighCellVoltsmooth);
-
+ 
   if (abs(HighCellVoltsmooth - HighCellVolt) > MeasurementStep)
   {
     if (HighCellVoltsmooth > HighCellVolt)
@@ -279,24 +226,6 @@ float BMSModuleManager::getLowCellVolt()
       if (modules[x].getLowCellV() <  LowCellVolt)  LowCellVolt = modules[x].getLowCellV();
     }
   }
-
-  //////smoothing////////////////////
-  /*
-    lowtotal = lowtotal - lowcell[lowindex];
-
-    lowcell[lowindex] = LowCellVolt;
-
-    lowtotal = lowtotal + LowCellVolt;
-
-    lowindex = lowindex + 1;
-
-    if (lowindex > 7)
-    {
-      lowindex = 0;
-    }
-
-    LowCellVolt = lowtotal / 8;
-  */
   /////smoothing////////////////////
 
   return LowCellVoltsmooth;
@@ -318,30 +247,6 @@ float BMSModuleManager::getHighCellVolt()
       if (modules[x].getHighCellV() >  HighCellVolt)  HighCellVolt = modules[x].getHighCellV();
     }
   }
-
-
-  //////smoothing////////////////////
-  /*
-    hightotal = hightotal - highcell[highindex];
-
-    if ( LowCellVolt > HighCellVolt)
-    {
-      HighCellVolt = LowCellVolt;
-    }
-
-    highcell[highindex] = HighCellVolt;
-
-    hightotal = hightotal + HighCellVolt;
-
-    highindex = highindex + 1;
-
-    if (highindex > 7)
-    {
-      highindex = 0;
-    }
-
-    HighCellVolt = hightotal / 8;
-  */
   /////smoothing////////////////////
 
   return HighCellVoltsmooth;
