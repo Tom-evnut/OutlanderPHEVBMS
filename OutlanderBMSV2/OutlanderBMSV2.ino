@@ -46,7 +46,7 @@ EEPROMSettings settings;
 IntervalTimer myTimer;
 
 /////Version Identifier/////////
-int firmver = 220324;
+int firmver = 220407;
 
 //Curent filter//
 float filterFrequency = 5.0 ;

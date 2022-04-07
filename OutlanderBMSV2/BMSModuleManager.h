@@ -35,6 +35,7 @@ class BMSModuleManager
     float getHighCellVolt();
     float getHighVoltage();
     float getLowVoltage();
+    void resetLowCellV();
     /*
       void processCANMsg(CAN_FRAME &frame);
     */

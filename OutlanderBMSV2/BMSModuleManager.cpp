@@ -83,7 +83,6 @@ int BMSModuleManager::seriescells()
   spack = 0;
   for (int y = 1; y < 63; y++)
   {
-    if (modules[y].isExisting())
     {
       spack = spack + modules[y].getscells();
     }
@@ -145,7 +144,7 @@ void BMSModuleManager::getAllVoltTemp()
   // Serial.print(LowCellVoltsmooth);
 
   /////smoothing High////////////////////
- 
+
   if (abs(HighCellVoltsmooth - HighCellVolt) > MeasurementStep)
   {
     if (HighCellVoltsmooth > HighCellVolt)
@@ -293,6 +292,13 @@ void BMSModuleManager::setSensors(int sensor, float Ignore, float tempconvin, in
       modules[x].setTempconv(tempconvin, tempoffin);
     }
   }
+  resetLowCellV();
+}
+
+void BMSModuleManager::resetLowCellV() //Reset once Ignore voltage determined
+{
+  getLowCellVolt();
+  LowCellVoltsmooth = LowCellVolt;
 }
 
 float BMSModuleManager::getAvgTemperature()
