@@ -626,3 +626,16 @@ void BMSModuleManager::printAllCSV(unsigned long timestamp, float current, int S
     }
   }
 }
+
+int BMSModuleManager::getBalancing()
+{
+  CellsBalancing = 0;
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting())
+    {
+      CellsBalancing = CellsBalancing + modules[y].getBalStat();
+    }
+  }
+  return CellsBalancing;
+}

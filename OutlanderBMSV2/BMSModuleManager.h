@@ -35,6 +35,7 @@ class BMSModuleManager
     float getHighCellVolt();
     float getHighVoltage();
     float getLowVoltage();
+       int getBalancing();
     void resetLowCellV();
     /*
       void processCANMsg(CAN_FRAME &frame);
@@ -82,6 +83,7 @@ class BMSModuleManager
     float highcell[8];
     float hightotal;
     int highindex;
+        int CellsBalancing;
     /*
       void sendBatterySummary();
       void sendModuleSummary(int module);
